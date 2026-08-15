@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:"
+    />
+    <title>DSH Desktop</title>
+    <link rel="stylesheet" href="shared.css" />
+    <link rel="stylesheet" href="boot.css" />
+  </head>
+  <body>
+    <div class="fx-layer" aria-hidden="true">
+      <div class="fx-grid"></div>
+      <div class="fx-scan"></div>
+      <span class="fx-particle"></span>
+      <span class="fx-particle"></span>
+      <span class="fx-particle"></span>
+      <span class="fx-particle"></span>
+      <span class="fx-particle"></span>
+      <span class="fx-particle"></span>
+      <span class="fx-particle"></span>
+      <span class="fx-particle"></span>
+    </div>
+    <main class="boot">
+      <div class="brand">
+        <div class="logo-wrap">
+          <div class="logo-mark">
+            <img src="logo.png" alt="DeepSeek Harness" width="64" height="64" />
+          </div>
+        </div>
+        <h1 id="app-name">DeepSeek Harness Desktop</h1>
+        <p class="sub muted" id="app-subtitle">DeepSeek Harness 桌面版</p>
+      </div>
+
+      <section class="status-card">
+        <div class="status-line">
+          <span class="dot" id="status-dot"></span>
+          <span id="status-text" class="status-text">…</span>
+          <span id="restart-badge" class="pill hidden"></span>
+        </div>
+        <p id="status-detail" class="muted detail"></p>
+        <div class="progress hidden" id="progress-wrap">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button class="ghost" id="btn-browser">在浏览器中打开</button>
+        <button class="ghost" id="btn-logs">查看日志</button>
+        <button class="primary" id="btn-settings">设置</button>
+        <button class="primary hidden" id="btn-retry">重试</button>
+      </div>
+
+      <section class="card log-card hidden" id="log-card">
+        <div class="log-head">
+          <span id="log-title">运行日志</span>
+          <button class="ghost" id="log-toggle">＋</button>
+        </div>
+        <pre id="log-box" class="log-box"></pre>
+      </section>
+
+      <div class="foot-area">
+        <p class="hint muted" id="first-run-hint"></p>
+        <p class="foot muted" id="foot-version"></p>
+      </div>
+    </main>
+    <script src="boot.js"></script>
+  </body>
+</html>

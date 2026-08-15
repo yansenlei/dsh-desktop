@@ -1,0 +1,32 @@
+{
+  "name": "@dsh-desktop/telegram-bridge",
+  "version": "0.1.0",
+  "description": "Telegram 桥接插件：在 Telegram 中与 DeepSeek Harness 对话并控制电脑",
+  "private": true,
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  },
+  "files": [
+    "lib"
+  ],
+  "license": "MIT"
+}

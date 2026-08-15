@@ -1,0 +1,118 @@
+{
+  "name": "dsh-desktop",
+  "productName": "DeepSeek Harness Desktop",
+  "version": "0.1.0",
+  "description": "DeepSeek Harness 桌面版 —— 一键安装、开箱即用的本地 AI 助手工作台",
+  "author": "DeepSeek Harness Desktop Team <dev@dsh-desktop.local>",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "main": "dist/main/index.cjs",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:plugins": "node scripts/build-plugins.mjs",
+    "prepare:runtime": "node scripts/prepare-runtime.mjs",
+    "icon": "node scripts/make-icon.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "start": "npm run build && electron .",
+    "dist": "npm run build && electron-builder --win nsis",
+    "dist:dir": "npm run build && electron-builder --win dir"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "electron": "38.8.6",
+    "electron-builder": "^26.0.12",
+    "esbuild": "^0.25.0",
+    "qrcode": "^1.5.4",
+    "typescript": "^5.6.0"
+  },
+  "build": {
+    "appId": "com.deepseekai.dsh-desktop",
+    "productName": "DeepSeek Harness Desktop",
+    "copyright": "Copyright © 2026 DeepSeek Harness Desktop",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "runtime",
+        "to": "dsh-runtime",
+        "filter": [
+          "**/*",
+          "!**/*.map",
+          "!**/README*",
+          "!**/CHANGELOG*",
+          "!**/LICENSE*",
+          "!**/node_modules/**/test/**",
+          "!**/node_modules/**/tests/**",
+          "!**/node_modules/**/example*/**",
+          "!**/node_modules/**/*.md"
+        ]
+      },
+      {
+        "from": "build/icon.png",
+        "to": "dsh-desktop/icons/icon.png"
+      },
+      {
+        "from": "build/tray.png",
+        "to": "dsh-desktop/icons/tray.png"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "DeepSeek-Harness-Desktop-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "DeepSeek Harness Desktop",
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "DeepSeek-Harness-Desktop-Setup-${version}.${ext}"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "build/icon.icns",
+      "category": "public.app-category.developer-tools",
+      "artifactName": "DeepSeek-Harness-Desktop-${version}-${arch}.${ext}"
+    },
+    "dmg": {
+      "artifactName": "DeepSeek-Harness-Desktop-${version}-${arch}.${ext}",
+      "title": "DeepSeek Harness Desktop ${version}"
+    },
+    "electronDownload": {
+      "cache": "D:/deepseek-harness-space/.electron-cache"
+    },
+    "npmRebuild": false
+  }
+}

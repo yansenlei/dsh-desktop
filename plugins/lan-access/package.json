@@ -1,0 +1,32 @@
+{
+  "name": "@dsh-desktop/lan-access",
+  "version": "0.1.0",
+  "description": "局域网访问插件：在 Harness UI 中显示二维码，手机扫码即可在局域网内访问自己的电脑",
+  "private": true,
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  },
+  "files": [
+    "lib"
+  ],
+  "license": "MIT"
+}

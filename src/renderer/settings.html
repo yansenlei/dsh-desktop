@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:"
+    />
+    <title>DSH Desktop 设置</title>
+    <link rel="stylesheet" href="shared.css" />
+    <link rel="stylesheet" href="settings.css" />
+  </head>
+  <body>
+    <main class="settings-page">
+      <header class="top">
+        <h1 id="title">设置</h1>
+        <button class="ghost" id="btn-close">✕</button>
+      </header>
+
+      <!-- 常规 -->
+      <section class="block">
+        <h2 id="sec-general">常规</h2>
+        <div class="card">
+          <div class="row">
+            <div class="label"><div class="title" id="lbl-port">服务端口</div><div class="desc" id="lbl-port-detail">启动后如被占用会自动顺延</div></div>
+            <div class="ctl"><input type="number" id="input-port" min="1024" max="65535" /><span class="muted" id="lbl-port-current"></span></div>
+          </div>
+          <div class="row">
+            <div class="label"><div class="title" id="lbl-autostart">开机自动启动</div></div>
+            <div class="ctl"><label class="switch"><input type="checkbox" id="chk-autostart" /><span class="track"></span></label></div>
+          </div>
+          <div class="row">
+            <div class="label"><div class="title" id="lbl-close-tray">关闭窗口时最小化到托盘</div></div>
+            <div class="ctl"><label class="switch"><input type="checkbox" id="chk-close-tray" /><span class="track"></span></label></div>
+          </div>
+          <div class="row">
+            <div class="label"><div class="title" id="lbl-min-tray">最小化时隐藏到托盘</div></div>
+            <div class="ctl"><label class="switch"><input type="checkbox" id="chk-min-tray" /><span class="track"></span></label></div>
+          </div>
+          <div class="row">
+            <div class="label"><div class="title" id="lbl-language">语言 Language</div><div class="desc" id="lbl-language-detail">界面显示语言</div></div>
+            <div class="ctl">
+              <select id="sel-language">
+                <option value="auto" id="opt-lang-auto">跟随系统（Auto）</option>
+                <option value="zh">中文</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="label"><div class="title" id="lbl-lan">局域网访问（手机扫码）</div><div class="desc" id="lbl-lan-detail">开启后手机连同一 Wi-Fi 即可访问；注意：会向局域网开放服务</div></div>
+            <div class="ctl"><label class="switch"><input type="checkbox" id="chk-lan" /><span class="track"></span></label></div>
+          </div>
+          <div class="row">
+            <div class="label"><div class="title" id="lbl-restart">服务管理</div><div class="desc" id="lbl-restart-detail">修改端口等设置后生效</div></div>
+            <div class="ctl"><button id="btn-restart" class="primary">重启服务</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 运行环境 -->
+      <section class="block">
+        <h2 id="sec-env">运行环境</h2>
+        <div class="card">
+          <div class="row">
+            <div class="label"><div class="title" id="env-bundled-node">内置 Node.js（Electron）</div><div class="desc" id="env-bundled-node-detail">已内置，无需安装</div></div>
+            <div class="ctl"><span class="badge ok" id="env-bundled-node-val"></span></div>
+          </div>
+          <div class="row">
+            <div class="label"><div class="title" id="env-system-node">系统 Node.js</div></div>
+            <div class="ctl"><span class="badge info" id="env-system-node-val">…</span></div>
+          </div>
+          <div class="row">
+            <div class="label"><div class="title" id="env-python">Python</div><div class="desc" id="env-python-detail">代理运行 Python 脚本时需要（可选）</div></div>
+            <div class="ctl">
+              <span class="badge info" id="env-python-val">…</span>
+              <button id="btn-install-python">一键安装</button>
+            </div>
+          </div>
+          <div class="row">
+            <div class="label"><div class="title" id="env-dsh-cli">dsh 命令行工具</div><div class="desc" id="env-dsh-cli-detail">在终端中使用 dsh（可选）</div></div>
+            <div class="ctl">
+              <span class="badge info" id="env-dsh-cli-val">…</span>
+              <button id="btn-install-cli">一键安装</button>
+            </div>
+          </div>
+          <div class="row">
+            <div class="label"><div class="title" id="env-winget">winget</div></div>
+            <div class="ctl"><span class="badge info" id="env-winget-val">…</span></div>
+          </div>
+          <div class="progress-box hidden" id="install-progress">
+            <div class="log" id="install-progress-log"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 数据与日志 -->
+      <section class="block">
+        <h2 id="sec-data">数据与日志</h2>
+        <div class="card">
+          <div class="row">
+            <div class="label"><div class="title" id="lbl-data-dir">数据目录</div><div class="desc" id="lbl-data-dir-detail">会话记录与配置文件保存位置</div></div>
+            <div class="ctl"><button id="btn-open-data">打开</button></div>
+          </div>
+          <div class="path-line" id="data-dir-path"></div>
+          <div class="row">
+            <div class="label"><div class="title" id="lbl-log-dir">日志目录</div></div>
+            <div class="ctl"><button id="btn-open-logs">打开</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 关于 -->
+      <section class="block">
+        <h2 id="sec-about">关于</h2>
+        <div class="card about-grid">
+          <span class="k" id="lbl-version">版本</span><span id="about-version">…</span>
+          <span class="k" id="lbl-dsh-version">DSH 版本</span><span id="about-dsh-version">…</span>
+          <span class="k">Electron</span><span id="about-electron">…</span>
+          <span class="k">Node</span><span id="about-node">…</span>
+          <span class="k" id="lbl-update">更新</span><span><button class="ghost" id="btn-check-update">检查更新</button> <span class="muted" id="update-result"></span></span>
+        </div>
+      </section>
+
+      <p class="muted saved-tip" id="saved-tip"></p>
+    </main>
+    <div class="toast" id="toast"></div>
+    <script src="settings.js"></script>
+  </body>
+</html>

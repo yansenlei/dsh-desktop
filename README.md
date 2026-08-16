@@ -126,12 +126,15 @@ npm run check:upstream           # 检查 runtime 内置 dsh 是否为 npm 最�
 - 请只在可信网络（家庭/办公 Wi-Fi）开启；公共 Wi-Fi 下不要开启。
 - 关闭后重启服务即恢复仅本机可访问。
 
-## 已知边界（v0.1）
+## 已知边界（v0.2）
 
-- 未做代码签名：Windows SmartScreen 会提示「未知发布者」，选择「仍要运行」即可。
+- **未做代码签名**：
+  - Windows：SmartScreen 会提示「未知发布者」，选择「仍要运行」即可。
+  - macOS：应用未签名/未公证，Gatekeeper 会拦截——需在「系统设置 → 隐私与安全性」中点击「仍要打开」，或右键应用选「打开」；正式分发建议配置 Apple 开发者证书 + 公证（见 `docs/BUILD_MAC.md`）。
 - 更新为「检查更新 + 静默安装」模式：设置页查询 GitHub Releases 最新版，Windows 上可直接
   「下载并安装」——流式下载安装包（带进度）→ NSIS `/S` 静默安装 → 应用退出并由安装器拉起新版本。
-- 当前仅 Windows x64 目标；macOS/Linux 的打包配置可在 `package.json` 中扩展。
+- **macOS 已发布**（v0.2.0 起，dmg/zip × x64/arm64），但 macOS 端暂无静默自动更新（走手动下载）。
+- Linux 目标尚未打包（`package.json` 中无 linux 配置，可按需扩展）。
 
 ## 许可
 

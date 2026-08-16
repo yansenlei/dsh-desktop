@@ -8,7 +8,10 @@
 > Node.js、无需命令行、无需理解「服务」「端口」这些概念。
 
 **仓库**：[github.com/yansenlei/dsh-desktop](https://github.com/yansenlei/dsh-desktop)
-**下载**：安装包发布在 **GitHub Releases**（应用内「设置 → 检查更新」以 Releases 为更新源）。
+
+**下载**：
+- 🖥️ **下载页面（推荐）**：[yansenlei.github.io/dsh-desktop](https://yansenlei.github.io/dsh-desktop/) —— 自动识别系统、macOS 区分 Apple Silicon / Intel，内置安装指引与常见问题
+- 📦 **GitHub Releases**：[最新版 v0.2.6](https://github.com/yansenlei/dsh-desktop/releases/latest)（应用内「设置 → 检查更新」以此为更新源）
 
 ## 默认内置插件，两种"用手机操作电脑"的方式
 

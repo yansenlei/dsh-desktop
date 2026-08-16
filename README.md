@@ -7,7 +7,9 @@
 
 **仓库**：[github.com/yansenlei/dsh-desktop](https://github.com/yansenlei/dsh-desktop)
 **下载**：安装包发布在 **GitHub Releases**（应用内「设置 → 检查更新」以 Releases 为更新源）。
-**插件**：内置插件独立维护于 [github.com/yansenlei/dsh-desktop-plugins](https://github.com/yansenlei/dsh-desktop-plugins)（局域网二维码 / Telegram 桥接），可单独安装到任何 Harness 环境。
+**插件**：内置插件各自独立维护、支持 npx 独立安装：
+- [dsh-plugin-lan-access](https://github.com/yansenlei/dsh-plugin-lan-access)（局域网二维码）· `npx dsh-plugin-lan-access`
+- [dsh-plugin-telegram-bridge](https://github.com/yansenlei/dsh-plugin-telegram-bridge)（Telegram 桥接）· `npx dsh-plugin-telegram-bridge`
 
 ## 产品特性
 

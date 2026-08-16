@@ -150,7 +150,9 @@ export class DshServerManager {
 
     let child: ChildProcess;
     try {
-      child = spawn(this.opts.execPath, [binPath, "web", "--patch", patchPath, "--port", String(port)], {
+      // Electron 以 Node 模式运行时，HMR 服务需要 --expose-internals；
+      // 不加在 Node 24（Electron 41+）下会报 "--expose-internals is required for HMR service"。
+      child = spawn(this.opts.execPath, ["--expose-internals", binPath, "web", "--patch", patchPath, "--port", String(port)], {
         env: {
           ...process.env,
           ELECTRON_RUN_AS_NODE: "1",

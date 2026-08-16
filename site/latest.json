@@ -1,0 +1,24 @@
+{
+  "latest": "0.2.4",
+  "publishedAt": "2026-08-16",
+  "windows": {
+    "ver": "0.2.4",
+    "exe": "DeepSeek-Harness-Desktop-Setup-0.2.4.exe",
+    "size": "145 MB"
+  },
+  "macApple": {
+    "ver": "0.2.4",
+    "dmg": "DeepSeek-Harness-Desktop-0.2.4-arm64.dmg",
+    "zip": "DeepSeek-Harness-Desktop-0.2.4-arm64.zip",
+    "dmgSize": "154 MB",
+    "zipSize": "174 MB"
+  },
+  "macIntel": {
+    "ver": "0.2.2",
+    "dmg": "DeepSeek-Harness-Desktop-0.2.2-x64.dmg",
+    "zip": "DeepSeek-Harness-Desktop-0.2.2-x64.zip",
+    "dmgSize": "149 MB",
+    "zipSize": "163 MB",
+    "note": "Intel 版最新可用为 v0.2.2（v0.2.3+ 暂缓 Intel 构建，恢复后此处自动更新）"
+  }
+}

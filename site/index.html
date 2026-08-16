@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeepSeek Harness Desktop · 社区版下载 —— 一键安装的本地 AI 工作台</title>
+<meta name="description" content="DeepSeek Harness Desktop 社区版（非官方）：面向非技术用户的一键安装桌面客户端，免装 Node.js，30 秒开箱即用。支持 Windows 与 macOS（Apple Silicon / Intel）。">
+<meta property="og:title" content="DeepSeek Harness Desktop · 社区版下载">
+<meta property="og:description" content="社区开源项目（非官方）：一键安装的本地 AI 工作台 —— 免装 Node.js，扫码操控，开箱即用。">
+<meta property="og:type" content="website">
+<meta property="og:image" content="/deepseek-harness.png">
+<link rel="icon" href="icon.png" type="image/png">
+<style>
+/* ============================================================
+   DeepSeek Harness Desktop · 社区版下载页
+   设计参考 DeepSeek Harness 官方页面：近黑背景 / 白色文字 / 品牌蓝 #4d6bfe
+   单文件，零外部依赖
+   ============================================================ */
+:root{
+  --bg:#0a0a0a;
+  --panel:#101113;
+  --panel-2:#1a1c20;
+  --line:rgba(255,255,255,.09);
+  --line-strong:rgba(255,255,255,.16);
+  --blue:#4d6bfe;
+  --blue-hover:#4176e6;
+  --blue-light:#6799fe;
+  --blue-dim:rgba(77,107,254,.14);
+  --text:#f9f8f8;
+  --muted:#9ca3af;
+  --dim:#6b7280;
+  --radius:16px;
+  --font:"Host Grotesk","DM Sans",-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei UI","Microsoft YaHei","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:"Fragment Mono",ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Consolas,Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:88px}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font);
+  -webkit-font-smoothing:antialiased;
+  line-height:1.65;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+::selection{background:rgba(77,107,254,.4);color:#fff}
+::-webkit-scrollbar{width:10px}
+::-webkit-scrollbar-track{background:#0a0a0a}
+::-webkit-scrollbar-thumb{background:#2a2d33;border-radius:8px;border:2px solid #0a0a0a}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit}
+
+/* ---------- 背景动效层 ---------- */
+#bgfx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.bg-grid{position:fixed;left:-24px;right:-24px;top:-24px;bottom:-24px;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(120,150,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(120,150,255,.05) 1px,transparent 1px);
+  background-size:56px 56px;
+  mask-image:radial-gradient(75% 62% at 50% 0%,rgba(0,0,0,.95),transparent 100%);
+  -webkit-mask-image:radial-gradient(75% 62% at 50% 0%,rgba(0,0,0,.95),transparent 100%);
+  transform:translate3d(0,0,0);will-change:transform}
+.cursor-glow{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0;transition:opacity .6s;
+  background:radial-gradient(620px circle at var(--mx,50vw) var(--my,30vh),rgba(77,107,254,.10),transparent 65%)}
+.cursor-glow.on{opacity:1}
+
+/* ---------- 通用 ---------- */
+.wrap{position:relative;z-index:1;max-width:1120px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-weight:600;line-height:1.25;letter-spacing:-.01em}
+.sec-label{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);letter-spacing:.06em;font-weight:500}
+.sec-label::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--blue)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:12px;font-weight:500;font-size:15px;padding:12px 24px;cursor:pointer;border:1px solid transparent;transition:background-color .18s,border-color .18s,color .18s,transform .18s,box-shadow .18s;white-space:nowrap}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:var(--blue-hover)}
+.btn-ghost{background:var(--panel);border-color:var(--line-strong);color:var(--text)}
+.btn-ghost:hover{border-color:var(--blue);color:#fff}
+.btn .svg{width:16px;height:16px;flex:none}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+.pill{display:inline-flex;align-items:center;gap:7px;padding:5px 13px;border-radius:9999px;font-size:12.5px;color:var(--blue-light);background:var(--blue-dim);border:1px solid rgba(77,107,254,.28);font-weight:500}
+
+/* ---------- 导航 ---------- */
+nav{position:fixed;top:0;left:0;right:0;z-index:50;transition:background-color .25s,border-color .25s;border-bottom:1px solid transparent}
+nav.scrolled{background:rgba(10,10,10,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom-color:var(--line)}
+nav .wrap{display:flex;align-items:center;height:64px;gap:26px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15.5px;letter-spacing:-.01em}
+.brand .mark{width:28px;height:28px;border-radius:8px;flex:none;display:block;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+.brand .community-tag{font-size:11px;font-weight:500;color:var(--blue-light);border:1px solid rgba(77,107,254,.35);border-radius:6px;padding:1px 7px;background:rgba(77,107,254,.1);letter-spacing:.02em}
+nav .links{display:flex;gap:24px;margin-left:auto;font-size:14.5px;color:var(--muted)}
+nav .links a{transition:color .18s}
+nav .links a:hover{color:var(--text)}
+nav .gh{display:inline-flex;align-items:center;gap:8px;padding:7px 15px;border-radius:10px;font-size:14px;border:1px solid var(--line-strong);color:var(--text);transition:border-color .18s,background-color .18s}
+nav .gh:hover{border-color:var(--blue);background:rgba(77,107,254,.08)}
+nav .gh svg{width:15px;height:15px}
+.nav-toggle{display:none;margin-left:auto;width:40px;height:40px;border-radius:10px;border:1px solid var(--line-strong);background:var(--panel);color:var(--text);cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:4.5px}
+.nav-toggle span{display:block;width:16px;height:1.6px;background:currentColor;border-radius:2px;transition:transform .25s,opacity .2s}
+.nav-toggle.open span:nth-child(1){transform:translateY(6px) rotate(45deg)}
+.nav-toggle.open span:nth-child(2){opacity:0}
+.nav-toggle.open span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+.nav-panel{display:none;position:fixed;top:64px;left:0;right:0;z-index:49;background:rgba(13,14,16,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:8px 24px 16px}
+.nav-panel.open{display:block}
+.nav-panel a{display:block;padding:12px 4px;font-size:15px;color:var(--muted);border-bottom:1px solid rgba(255,255,255,.05)}
+.nav-panel a:hover{color:var(--text)}
+.nav-panel a:last-child{border-bottom:none}
+
+/* ---------- Hero：截图全宽背景，左半展示图片，右半压暗放文字 ---------- */
+.hero{position:relative;padding:150px 0 84px;overflow:hidden}
+.hero::before{content:"";position:absolute;left:6%;top:-380px;width:1040px;height:720px;background:radial-gradient(closest-side,rgba(77,107,254,.18),transparent 72%);pointer-events:none}
+.hero .wrap{max-width:1240px}
+.hero-card{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line-strong);box-shadow:0 44px 120px rgba(0,0,0,.62),0 0 0 1px rgba(77,107,254,.05);background:#0a0a0a}
+.hero-card .bg{display:block;width:100%;height:auto;aspect-ratio:2560/1640;
+  -webkit-mask-image:linear-gradient(to right,#000 0%,#000 22%,rgba(0,0,0,.5) 34%,rgba(0,0,0,.12) 48%,transparent 62%);
+  mask-image:linear-gradient(to right,#000 0%,#000 22%,rgba(0,0,0,.5) 34%,rgba(0,0,0,.12) 48%,transparent 62%)}
+.hero-card .blur{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(22px);pointer-events:none;
+  -webkit-mask-image:linear-gradient(to right,transparent 18%,rgba(0,0,0,.65) 34%,rgba(0,0,0,.5) 50%,transparent 64%);
+  mask-image:linear-gradient(to right,transparent 18%,rgba(0,0,0,.65) 34%,rgba(0,0,0,.5) 50%,transparent 64%)}
+.hero-card .scrim{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,transparent 26%,rgba(10,10,10,.42) 42%,rgba(10,10,10,.82) 58%,#0a0a0a 70%,#0a0a0a 100%)}
+/* 卡片内动效层：粒子 + 鼠标光晕（位于图片之上、文字之下） */
+.hero-card .hero-fx{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+.hero-card .hero-glow{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .6s;
+  background:radial-gradient(460px circle at var(--mx,30%) var(--my,40%),rgba(77,107,254,.16),transparent 62%)}
+.hero-card .hero-glow.on{opacity:1}
+.hero-copy{position:absolute;top:50%;right:0;transform:translateY(-50%);width:47%;max-width:560px;padding:36px 52px 36px 10px;z-index:3}
+.hero-copy .brand-hero{display:inline-flex;align-items:center;gap:11px;margin-bottom:18px}
+.hero-copy .brand-hero img{width:42px;height:42px;border-radius:11px;display:block;box-shadow:0 6px 20px rgba(0,0,0,.5),0 0 0 1px var(--line-strong)}
+.hero-copy .brand-hero .name{text-align:left}
+.hero-copy .brand-hero .name b{display:block;font-size:14.5px;font-weight:600;line-height:1.3}
+.hero-copy .brand-hero .name span{font-size:11.5px;color:var(--dim);font-family:var(--mono);letter-spacing:.03em}
+.hero h1{font-size:clamp(32px,3.6vw,46px);line-height:1.16;margin:0 0 14px;font-weight:650;text-align:left}
+.hero .lede{color:#c3c9d6;font-size:15px;max-width:460px;margin-bottom:12px;line-height:1.75}
+.hero .lede b{color:var(--text);font-weight:550}
+.hero .note{font-size:12px;color:var(--dim);margin-bottom:22px;display:flex;align-items:flex-start;gap:7px;line-height:1.6}
+.hero .note svg{width:13px;height:13px;flex:none;margin-top:3px}
+.cta-row{display:flex;gap:10px;flex-wrap:wrap}
+.cta-row .btn{padding:12px 22px;font-size:14.5px}
+.hero .meta{display:flex;gap:16px;margin-top:22px;color:var(--dim);font-size:11.5px;flex-wrap:wrap;align-items:center}
+.hero .meta span{display:flex;align-items:center;gap:6px}
+.hero .meta svg{width:13px;height:13px;color:var(--blue-light);flex:none}
+.hero .meta .ver-chip{color:var(--blue-light);border:1px solid rgba(77,107,254,.35);background:rgba(77,107,254,.1);border-radius:9999px;padding:1px 10px;font-family:var(--mono);font-size:11px;letter-spacing:.03em}
+.hero .meta .view-full{color:var(--dim);transition:color .18s;display:inline-flex;align-items:center;gap:5px}
+.hero .meta .view-full:hover{color:var(--blue-light)}
+.hero .meta .view-full svg{width:12px;height:12px}
+
+/* ---------- 分区通用 ---------- */
+section.block{padding:92px 0 8px}
+.sec-head{max-width:660px;margin:0 auto 46px;text-align:center}
+.sec-head h2{font-size:clamp(26px,3.2vw,36px);margin:14px 0 12px}
+.sec-head p{color:var(--muted);font-size:15px}
+
+/* ---------- 下载区 ---------- */
+.os-banner{margin:0 auto 36px;max-width:720px;display:flex;align-items:center;gap:13px;padding:14px 20px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.os-banner .dot{width:9px;height:9px;border-radius:50%;background:var(--blue);flex:none;box-shadow:0 0 0 4px rgba(77,107,254,.15)}
+.os-banner .txt{font-size:14.5px;color:var(--muted)}
+.os-banner .txt b{color:var(--text);font-weight:600}
+.os-banner .badge{margin-left:auto;flex:none;font-size:11.5px;color:var(--blue-light);border:1px solid rgba(77,107,254,.35);border-radius:9999px;padding:3px 11px;background:rgba(77,107,254,.08);font-family:var(--mono);letter-spacing:.04em}
+
+.dl-grid{display:grid;grid-template-columns:1fr 1.16fr 1fr;gap:20px;align-items:stretch}
+.card{position:relative;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px 24px 22px;transition:border-color .2s,transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-3px);border-color:var(--line-strong)}
+.card .os-tag{position:absolute;top:-12px;right:16px;display:none;font-size:11.5px;font-weight:500;color:#fff;background:var(--blue);padding:4px 12px;border-radius:9999px}
+.card.os-active{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue),0 10px 34px rgba(77,107,254,.16)}
+.card.os-active .os-tag{display:block}
+.card .os-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--blue-dim);border:1px solid rgba(77,107,254,.25);margin-bottom:16px}
+.card .os-icon svg{width:22px;height:22px;stroke:var(--blue-light);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.card h3{font-size:19px;font-weight:600}
+.card .sub{color:var(--dim);font-size:12.5px;font-family:var(--mono);margin:3px 0 18px;letter-spacing:.04em}
+.card .dl-row{display:flex;flex-direction:column;gap:10px}
+.card .dl-row .btn{width:100%;padding:12px 16px;font-size:14px}
+.btn .badge-ver{margin-left:auto;font-size:11px;font-weight:500;font-family:var(--mono);opacity:.8;background:rgba(255,255,255,.14);padding:1px 8px;border-radius:6px}
+.card .alt-row{display:flex;gap:8px;margin-top:12px;font-size:12px;color:var(--dim);flex-wrap:wrap;justify-content:center}
+.card .alt-row a{color:var(--muted);transition:color .18s;border-bottom:1px solid transparent}
+.card .alt-row a:hover{color:var(--blue-light);border-color:var(--blue-light)}
+.card .tip{margin-top:auto;padding-top:16px;font-size:12.5px;color:var(--dim);line-height:1.7}
+.card .tip b{color:var(--muted);font-weight:600}
+
+.arch-group{border:1px solid var(--line);border-radius:12px;padding:15px 14px 12px;transition:border-color .2s,background-color .2s}
+.arch-group + .arch-group{margin-top:12px}
+.arch-group.arch-active{border-color:var(--blue);background:rgba(77,107,254,.06)}
+.arch-group .arch-name{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14.5px;margin-bottom:2px}
+.arch-group .arch-name .chip-tag{font-size:10.5px;font-family:var(--mono);padding:2px 7px;border-radius:5px;background:rgba(77,107,254,.12);color:var(--blue-light);border:1px solid rgba(77,107,254,.3);font-weight:500;letter-spacing:.04em}
+.arch-group.arch-active .arch-name .chip-tag{background:var(--blue);color:#fff}
+.arch-group .arch-meta{font-size:12px;color:var(--dim);margin-bottom:11px;font-family:var(--mono)}
+.arch-group .dl-row .btn{padding:10px 14px;font-size:13.5px;border-radius:10px}
+.howto{font-size:12px;color:var(--dim);margin-top:10px}
+.howto kbd{font-family:var(--mono);font-size:11px;background:#1a1c20;border:1px solid var(--line-strong);border-radius:5px;padding:1px 6px;color:var(--muted)}
+
+.linux-cmd{display:flex;align-items:center;gap:8px;background:#0d0e10;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:var(--mono);font-size:12.5px;color:#a5b4fc;margin:4px 0 6px;overflow-x:auto}
+.linux-cmd .cmd{flex:1;white-space:nowrap}
+.linux-cmd .prompt{color:var(--dim);user-select:none}
+.copy-btn{flex:none;font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--line-strong);background:transparent;color:var(--muted);cursor:pointer;transition:.18s}
+.copy-btn:hover{color:#fff;border-color:var(--blue)}
+.copy-btn.ok{color:#fff;background:var(--blue);border-color:var(--blue)}
+
+.mirror-note{text-align:center;margin-top:28px;font-size:13px;color:var(--dim)}
+.mirror-note .on{display:none}
+.mirror-note b{color:var(--muted);font-weight:500}
+.mirror-note.mirror-on .on{display:inline}
+.mirror-note.mirror-on .off{display:none}
+#freshNote{margin-top:10px;font-size:12.5px;color:var(--blue-light)}
+
+/* ---------- 特性 ---------- */
+.feat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.feat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px 22px;transition:border-color .2s,transform .2s,box-shadow .2s}
+.feat:hover{transform:translateY(-3px);border-color:var(--line-strong)}
+.feat .ic{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:var(--blue-dim);border:1px solid rgba(77,107,254,.25);margin-bottom:14px}
+.feat .ic svg{width:18px;height:18px;stroke:var(--blue-light);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.feat h3{font-size:16px;font-weight:600;margin-bottom:6px}
+.feat p{font-size:13.5px;color:var(--muted);line-height:1.75}
+/* 两大内置插件亮点卡 */
+.feat-hero{position:relative;grid-column:span 2;padding:30px 28px 22px;border-color:rgba(77,107,254,.42);
+  background:linear-gradient(160deg,rgba(77,107,254,.12),rgba(77,107,254,.02) 60%),var(--panel);
+  box-shadow:0 0 0 1px rgba(77,107,254,.16),0 14px 44px rgba(77,107,254,.12)}
+.feat-hero:hover{transform:translateY(-4px);border-color:rgba(77,107,254,.75);box-shadow:0 0 0 1px rgba(77,107,254,.3),0 18px 54px rgba(77,107,254,.2)}
+.feat-hero .feat-badge{position:absolute;top:-11px;left:24px;display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:#fff;background:var(--blue);border-radius:9999px;padding:3px 13px;box-shadow:0 4px 14px rgba(77,107,254,.45)}
+.feat-hero .feat-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:#9fd0ff;box-shadow:0 0 8px #9fd0ff;animation:pulse 2s infinite}
+.feat-hero .ic{width:48px;height:48px;border-radius:12px;background:var(--blue);border:none;box-shadow:0 8px 22px rgba(77,107,254,.4)}
+.feat-hero .ic svg{width:24px;height:24px;stroke:#fff;stroke-width:1.9}
+.feat-hero h3{font-size:18.5px;margin-bottom:8px}
+.feat-hero p{font-size:14px;line-height:1.8}
+.feat-hero .feat-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding-top:12px;border-top:1px dashed rgba(77,107,254,.28);font-size:12px}
+.feat-hero .feat-foot code{font-family:var(--mono);font-size:11.5px;color:var(--blue-light);background:rgba(77,107,254,.1);border:1px solid rgba(77,107,254,.28);border-radius:6px;padding:2px 8px;letter-spacing:.02em}
+.feat-hero .feat-foot a{color:var(--dim);transition:color .18s}
+.feat-hero .feat-foot a:hover{color:var(--blue-light)}
+
+/* ---------- FAQ ---------- */
+.faq{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.faq-item{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;transition:border-color .2s}
+.faq-item.open{border-color:var(--line-strong)}
+.faq-q{width:100%;display:flex;align-items:center;gap:13px;padding:17px 20px;background:transparent;border:none;color:var(--text);font-size:15px;font-weight:500;cursor:pointer;text-align:left;font-family:inherit}
+.faq-q .n{flex:none;width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-family:var(--mono);color:var(--blue-light);background:var(--blue-dim);border:1px solid rgba(77,107,254,.25)}
+.faq-q .arrow{margin-left:auto;flex:none;width:18px;height:18px;transition:transform .22s;color:var(--dim)}
+.faq-item.open .arrow{transform:rotate(180deg);color:var(--blue-light)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.faq-a .inner{padding:2px 20px 20px 61px;font-size:14px;color:var(--muted);line-height:1.85}
+.faq-a code{font-family:var(--mono);font-size:12.5px;color:#a5b4fc;background:#0d0e10;border:1px solid var(--line);border-radius:5px;padding:1px 7px}
+.faq-a .cmdline{display:block;margin:8px 0;padding:10px 14px;border-radius:9px;background:#0d0e10;border:1px solid var(--line);font-family:var(--mono);font-size:12.5px;color:#a5b4fc;overflow-x:auto}
+
+/* ---------- 底部 ---------- */
+footer{margin-top:110px;padding:52px 0 36px;border-top:1px solid var(--line);background:#0d0e10}
+footer .wrap{display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start}
+footer .col{flex:1;min-width:210px}
+footer .col.brand-col{flex:1.5}
+footer h4{font-size:13.5px;margin-bottom:14px;color:var(--text);font-weight:600;letter-spacing:.02em}
+footer .f-links{display:flex;flex-direction:column;gap:9px;font-size:13.5px}
+footer .f-links a{color:var(--muted);transition:color .18s;width:fit-content}
+footer .f-links a:hover{color:var(--blue-light)}
+footer .disclaimer{margin-top:34px;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:#0a0a0a;font-size:12.5px;color:var(--dim);line-height:1.85}
+footer .disclaimer b{color:var(--muted);font-weight:600}
+footer .fine{margin-top:22px;display:flex;flex-wrap:wrap;gap:8px 26px;justify-content:space-between;font-size:12px;color:var(--dim)}
+footer .fine a{color:var(--dim);transition:color .18s}
+footer .fine a:hover{color:var(--muted)}
+
+/* ---------- 动画 ---------- */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .55s ease,transform .55s ease}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s !important;animation-iteration-count:1 !important;transition-duration:.001s !important}
+  html{scroll-behavior:auto}
+  .reveal{opacity:1;transform:none}
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:1000px){
+  .hero{padding-top:128px;padding-bottom:60px}
+  .hero-card .bg{height:238px;object-fit:cover;object-position:left center;-webkit-mask-image:none;mask-image:none}
+  .hero-card .blur{display:none}
+  .hero-card .scrim{display:none}
+  .hero-card .hero-fx,.hero-card .hero-glow{display:none}
+  .hero-copy{position:static;transform:none;width:100%;max-width:none;padding:22px 20px 26px;background:#0d0e10;border-top:1px solid var(--line);z-index:auto}
+  .hero-copy .brand-hero img{width:36px;height:36px}
+  .hero h1{font-size:28px}
+  .dl-grid{grid-template-columns:1fr;max-width:540px;margin:0 auto}
+  .feat-grid{grid-template-columns:1fr 1fr}
+  nav .links{display:none}
+  nav .gh{display:none}
+  .nav-toggle{display:flex}
+}
+@media (max-width:620px){
+  .feat-grid{grid-template-columns:1fr}
+  .feat-hero{grid-column:span 1}
+  .os-banner{flex-wrap:wrap}
+  .os-banner .badge{margin-left:0}
+  .hero .meta{gap:10px 16px}
+  .hero h1{font-size:26px}
+  .hero{padding:112px 0 52px}
+  .hero-card{border-radius:14px}
+  .hero-card .bg{height:196px}
+  .cta-row{flex-direction:column}
+  .cta-row .btn{width:100%}
+  .hero .note{flex-wrap:wrap}
+  .sec-head h2{font-size:26px}
+  .card{padding:22px 18px 20px}
+  .faq-q{font-size:14.5px;padding:15px 16px}
+  .faq-a .inner{padding:2px 16px 18px 16px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="bgfx" aria-hidden="true"></canvas>
+<div class="bg-grid" aria-hidden="true"></div>
+<div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+
+<!-- ================= 导航 ================= -->
+<nav id="nav">
+  <div class="wrap">
+    <a class="brand" href="#top">
+      <img class="mark" src="icon.png" alt="DeepSeek Harness Desktop 图标" width="28" height="28">
+      <span>DeepSeek Harness Desktop</span>
+      <span class="community-tag">社区版</span>
+    </a>
+    <div class="links">
+      <a href="#download">下载</a>
+      <a href="#features">特性</a>
+      <a href="#faq">安装说明</a>
+    </div>
+    <a class="gh" href="https://github.com/yansenlei/dsh-desktop" target="_blank" rel="noopener">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a>
+    <button class="nav-toggle" id="navToggle" type="button" aria-label="打开菜单" aria-expanded="false"><span></span><span></span><span></span></button>
+  </div>
+  <div class="nav-panel" id="navPanel">
+    <a href="#download">下载</a>
+    <a href="#features">特性</a>
+    <a href="#faq">安装说明</a>
+    <a href="https://github.com/yansenlei/dsh-desktop" target="_blank" rel="noopener">GitHub 仓库 ↗</a>
+  </div>
+</nav>
+
+<!-- ================= Hero：截图全宽背景 ================= -->
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="hero-card">
+      <img class="bg" src="deepseek-harness.png" alt="DeepSeek Harness Desktop 运行截图">
+      <img class="blur" src="deepseek-harness.png" alt="" aria-hidden="true">
+      <div class="scrim" aria-hidden="true"></div>
+      <canvas class="hero-fx" id="bgfxHero" aria-hidden="true"></canvas>
+      <div class="hero-glow" id="cursorGlowHero" aria-hidden="true"></div>
+      <div class="hero-copy">
+        <div class="brand-hero">
+          <img src="icon.png" alt="DeepSeek Harness Desktop 图标" width="42" height="42">
+          <div class="name">
+            <b>DeepSeek Harness Desktop</b>
+            <span>community edition · <span style="font-size:11px;color:var(--blue-light);border:1px solid rgba(77,107,254,.35);background:rgba(77,107,254,.1);border-radius:6px;padding:0 7px;margin-left:4px">社区版</span></span>
+          </div>
+        </div>
+        <h1>一键安装的<br>本地 AI 工作台</h1>
+        <p class="lede">面向<b>非技术用户</b>的 DeepSeek Harness 桌面客户端 —— <b>免装 Node.js、无需命令行</b>，30 秒装好并跑起你的本地 AI 工作台。</p>
+        <p class="note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3v.5"/></svg>
+          <span>社区开源项目 · 非官方版本，与 DeepSeek（深度求索）无隶属关系</span>
+        </p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#download">
+            <svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            立即下载
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/yansenlei/dsh-desktop" target="_blank" rel="noopener">
+            <svg class="svg" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+            查看 GitHub
+          </a>
+        </div>
+        <div class="meta">
+          <span class="ver-chip" id="ver-pill">v0.2.4</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16"/></svg>Windows 10+ / macOS</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>内置 DSH 运行时 · 离线可用</span>
+          <a class="view-full" href="deepseek-harness.png" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6M11 8v6"/></svg>
+            完整截图 ↗
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= 下载 ================= -->
+<section class="block" id="download">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-label">DOWNLOAD</span>
+      <h2>立即下载</h2>
+      <p>已自动识别您的系统并高亮推荐安装包 —— 若识别有误，请手动选择。</p>
+    </div>
+
+    <div class="os-banner reveal" id="osBanner">
+      <span class="dot" aria-hidden="true"></span>
+      <div class="txt" id="osBannerText">正在识别您的操作系统…</div>
+      <span class="badge" id="osBannerBadge">AUTO DETECT</span>
+    </div>
+
+    <div class="dl-grid">
+      <!-- Windows -->
+      <div class="card reveal" data-os="windows" id="card-windows">
+        <span class="os-tag">✓ 您的系统</span>
+        <div class="os-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 5.5L10.5 4.4v7.1H3zM11.5 4.2L21 3v8.5h-9.5zM3 12.6h7.5v7.1L3 18.6zM11.5 12.6H21V21l-9.5-1.2z"/></svg>
+        </div>
+        <h3>Windows</h3>
+        <div class="sub">10 / 11 · x64</div>
+        <div class="dl-row">
+          <a class="btn btn-primary" id="win-primary" href="#" rel="noopener">
+            <svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            下载安装包 (.exe)
+            <span class="badge-ver" id="win-ver"></span>
+          </a>
+        </div>
+        <div class="alt-row">
+          <span id="win-size"></span>
+          <a id="win-alt" href="#" target="_blank" rel="noopener">GitHub 线路 ↗</a>
+        </div>
+        <div class="tip">安装提示：若 SmartScreen 提示「<b>未知发布者</b>」，点击「<b>更多信息 → 仍要运行</b>」即可（未签名开源包）。</div>
+      </div>
+
+      <!-- macOS -->
+      <div class="card reveal" data-os="macos" id="card-macos">
+        <span class="os-tag">✓ 您的系统</span>
+        <div class="os-icon">
+          <svg viewBox="0 0 24 24"><path d="M16.4 12.6c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.6-1.7-3.2-1.7-1.4-.1-2.7.8-3.4.8-.7 0-1.8-.8-3-.8-1.5 0-2.9.9-3.7 2.3-1.6 2.7-.4 6.8 1.1 9 .8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3.1.7c1.3 0 2.1-1.1 2.9-2.2.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.8zM14.3 5.8c.6-.8 1-1.8.9-2.9-.9 0-1.9.6-2.5 1.3-.6.6-1.1 1.7-.9 2.7 1 .1 2-.5 2.5-1.1z"/></svg>
+        </div>
+        <h3>macOS</h3>
+        <div class="sub">根据芯片选择对应版本</div>
+
+        <div class="arch-group" data-arch="arm64" id="arch-arm64">
+          <div class="arch-name">Apple Silicon <span class="chip-tag">M1 · M2 · M3 · M4</span></div>
+          <div class="arch-meta" id="aa-meta"></div>
+          <div class="dl-row">
+            <a class="btn btn-primary" id="mac-aa-primary" href="#" rel="noopener">
+              <svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+              下载 .dmg <span class="badge-ver" id="aa-ver"></span>
+            </a>
+          </div>
+          <div class="alt-row"><span id="aa-size"></span><a id="mac-aa-zip" href="#" target="_blank" rel="noopener">.zip 备用</a><a id="mac-aa-alt" href="#" target="_blank" rel="noopener">GitHub 线路 ↗</a></div>
+        </div>
+
+        <div class="arch-group" data-arch="x64" id="arch-x64">
+          <div class="arch-name">Intel <span class="chip-tag">x64</span></div>
+          <div class="arch-meta" id="ai-meta"></div>
+          <div class="dl-row">
+            <a class="btn btn-ghost" id="mac-ai-primary" href="#" rel="noopener">
+              <svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+              下载 .dmg <span class="badge-ver" id="ai-ver"></span>
+            </a>
+          </div>
+          <div class="alt-row"><span id="ai-size"></span><a id="mac-ai-zip" href="#" target="_blank" rel="noopener">.zip 备用</a><a id="mac-ai-alt" href="#" target="_blank" rel="noopener">GitHub 线路 ↗</a></div>
+          <div class="howto" id="ai-note"></div>
+        </div>
+
+        <div class="howto">不确定芯片？点击左上角 <kbd></kbd> → 「<kbd>关于本机</kbd>」→ 查看「<kbd>芯片</kbd>」。</div>
+        <div class="tip">安装提示：首次打开提示「<b>无法验证开发者</b>」时，点击「<b>打开</b>」即可（仅需一次，v0.2.4+ 为 ad-hoc 签名）。</div>
+      </div>
+
+      <!-- Linux -->
+      <div class="card reveal" data-os="linux" id="card-linux">
+        <span class="os-tag">✓ 您的系统</span>
+        <div class="os-icon">
+          <svg viewBox="0 0 24 24"><path d="M4 5h16v12H4zM4 17l4-3 3 2 4-4 5 4"/></svg>
+        </div>
+        <h3>Linux</h3>
+        <div class="sub">安装包即将推出</div>
+        <div class="dl-row">
+          <button class="btn btn-ghost" disabled>暂未提供安装包</button>
+        </div>
+        <div class="alt-row"><span>先用命令行快速体验：</span></div>
+        <div class="linux-cmd"><span class="prompt">$ </span><span class="cmd">npx @deepseek-ai/dsh web</span><button class="copy-btn" id="copy-npx" type="button">复制</button></div>
+        <div class="tip">需要 Node.js LTS（仅此方式）；桌面安装包发布后会第一时间在此更新。</div>
+      </div>
+    </div>
+
+    <p class="mirror-note" id="mirrorNote">
+      <span class="off">当前<b>直连 GitHub Releases</b> —— 按部署指南配置国内镜像后，主按钮自动切换为国内加速线路。</span>
+      <span class="on">主按钮走<b>国内加速线路</b> · GitHub 线路供海外/备用。</span>
+    </p>
+    <p class="mirror-note" id="freshNote" hidden></p>
+  </div>
+</section>
+
+<!-- ================= 特性 ================= -->
+<section class="block" id="features">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-label">FEATURES</span>
+      <h2>为什么选择桌面版</h2>
+      <p>把「安装 Node.js、开终端、敲命令」全部省掉；更内置两款<b>手机遥控插件</b> —— 在家扫码、出门 Telegram，AI 工作台随时在线。</p>
+    </div>
+    <div class="feat-grid">
+      <!-- 亮点：两款内置插件 -->
+      <div class="feat feat-hero reveal">
+        <span class="feat-badge">内置插件 · 亮点</span>
+        <div class="ic"><svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="20" rx="2"/><path d="M12 18v.01"/></svg></div>
+        <h3>扫码局域网 · 手机操作电脑</h3>
+        <p>在家或办公室：手机连上同一 Wi-Fi，扫工作台侧边栏「手机访问」二维码，躺着也能让 AI 干活。默认关闭、一键开启，安全说明内置。</p>
+        <div class="feat-foot"><code>lan-access</code><a href="https://github.com/yansenlei/dsh-plugin-lan-access" target="_blank" rel="noopener">插件源码 ↗</a></div>
+      </div>
+      <div class="feat feat-hero reveal">
+        <span class="feat-badge">内置插件 · 亮点</span>
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 0-3 6.7L21 21l-2.2-2.2"/></svg></div>
+        <h3>Telegram 遥控 · 出门在外照常干活</h3>
+        <p>没在家？在自己的 Telegram 里跟机器人对话，随时指挥你的电脑；与浏览器工作台共用同一会话，聊天记录实时同步。</p>
+        <div class="feat-foot"><code>telegram-bridge</code><a href="https://github.com/yansenlei/dsh-plugin-telegram-bridge" target="_blank" rel="noopener">插件源码 ↗</a></div>
+      </div>
+      <!-- 其余特性 -->
+      <div class="feat reveal">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg></div>
+        <h3>一键安装</h3>
+        <p>NSIS 安装包双击即装：桌面/开始菜单快捷方式、卸载器齐全，装完自动启动，30 秒进入工作台。</p>
+      </div>
+      <div class="feat reveal">
+        <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 3v18M16 3v18M3 8h18M3 16h18"/></svg></div>
+        <h3>免装 Node.js</h3>
+        <p>应用自带 Electron（内置 Node 24 运行时），DSH 服务在应用内以子进程运行 —— 电脑上什么都不用装。</p>
+      </div>
+      <div class="feat reveal">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l8 3.5v5.2c0 4.6-3.2 8-8 9.3-4.8-1.3-8-4.7-8-9.3V6.5z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <h3>数据自包含</h3>
+        <p>会话、配置、存储都放在应用数据目录，卸载不丢数据；端口冲突自动顺延，服务崩溃自动重启。</p>
+      </div>
+      <div class="feat reveal">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3v6h-6"/></svg></div>
+        <h3>自动更新</h3>
+        <p>「设置 → 检查更新」一键下载并安装新版（以 GitHub Releases 为更新源），Windows / macOS 同步支持。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 安装说明 ================= -->
+<section class="block" id="faq">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-label">FAQ</span>
+      <h2>安装说明</h2>
+      <p>常见问题速查 —— 点击展开。</p>
+    </div>
+    <div class="faq">
+      <div class="faq-item reveal">
+        <button class="faq-q" type="button"><span class="n">01</span>macOS 提示「无法验证开发者」怎么办？<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="faq-a"><div class="inner">
+          v0.2.4 起安装包为 <b>ad-hoc 签名</b>：首次打开提示「无法验证开发者」时，直接点击「<b>打开</b>」即可（或右键应用 → 打开），只需一次，无需终端。<br>
+          若旧版本（v0.2.3 及更早）提示「已损坏，无法打开」，请改装 v0.2.4 及以上版本；或临时在终端执行：
+          <span class="cmdline">codesign --force --sign - "/Applications/DeepSeek Harness Desktop.app"</span>
+        </div></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-q" type="button"><span class="n">02</span>Windows 提示「Windows 已保护你的电脑」？<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="faq-a"><div class="inner">
+          安装包未做商业代码签名，SmartScreen 会提示「未知发布者」：点击「<b>更多信息</b>」→「<b>仍要运行</b>」即可正常安装。来源请认准本页与 GitHub 仓库 <code>yansenlei/dsh-desktop</code> 的 Release。
+        </div></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-q" type="button"><span class="n">03</span>卸载会删掉我的数据吗？<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="faq-a"><div class="inner">
+          不会。会话、配置、存储都保存在应用数据目录（Windows：<code>%APPDATA%\DeepSeek Harness Desktop</code>；macOS：<code>~/Library/Application Support/DeepSeek Harness Desktop</code>），卸载不删除，重装即恢复。
+        </div></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-q" type="button"><span class="n">04</span>默认端口被占用怎么办？<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="faq-a"><div class="inner">
+          不需要处理。服务默认使用 <code>3080</code> 端口，被占用时<b>自动顺延</b>到下一个可用端口并照常启动。
+        </div></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-q" type="button"><span class="n">05</span>如何更新到新版本？<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="faq-a"><div class="inner">
+          应用内「<b>设置 → 检查更新</b>」：检测到新版本后一键「下载并安装」，Windows（静默安装）与 macOS（自动替换 .app 并重启）均无需手动操作。
+        </div></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-q" type="button"><span class="n">06</span>社区版与官方是什么关系？<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="faq-a"><div class="inner">
+          本桌面客户端是<b>社区开源项目</b>（MIT 许可），由第三方开发者维护，<b>不是 DeepSeek 官方产品</b>，与 DeepSeek（深度求索）无隶属、赞助或背书关系。
+          它基于 MIT 许可的上游开源项目 <code>deepseek-ai/deepseek-harness</code> 构建，内置的 Harness 运行时及其许可归属上游项目；「DeepSeek」「DeepSeek Harness」等名称与商标归其权利方所有，本页仅作兼容性说明用途。
+          如需官方版本与技术支持，请访问官方渠道：<a href="https://www.deepseek.com/harness/" target="_blank" rel="noopener" style="color:var(--blue-light)">deepseek.com/harness ↗</a>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 底部 ================= -->
+<footer>
+  <div class="wrap">
+    <div class="col brand-col">
+      <a class="brand" href="#top" style="margin-bottom:12px">
+        <img class="mark" src="icon.png" alt="DeepSeek Harness Desktop 图标" width="28" height="28">
+        <span>DeepSeek Harness Desktop</span>
+        <span class="community-tag">社区版</span>
+      </a>
+      <p style="font-size:13px;color:var(--muted);max-width:360px;margin-top:12px">让没有技术背景的人，30 秒装好并用上 DeepSeek Harness —— 社区开源 · 免费 · 离线可用。</p>
+    </div>
+    <div class="col">
+      <h4>项目</h4>
+      <div class="f-links">
+        <a href="https://github.com/yansenlei/dsh-desktop" target="_blank" rel="noopener">GitHub 仓库 ↗</a>
+        <a href="https://github.com/yansenlei/dsh-desktop/releases" target="_blank" rel="noopener">全部版本（Releases）↗</a>
+        <a href="https://github.com/yansenlei/dsh-desktop/blob/main/docs/USER_GUIDE.zh.md" target="_blank" rel="noopener">用户指南 ↗</a>
+        <a href="https://github.com/yansenlei/dsh-desktop/issues" target="_blank" rel="noopener">问题反馈 ↗</a>
+      </div>
+    </div>
+    <div class="col">
+      <h4>相关资源</h4>
+      <div class="f-links">
+        <a href="https://github.com/yansenlei/dsh-plugin-lan-access" target="_blank" rel="noopener">lan-access · 扫码局域网 ↗</a>
+        <a href="https://github.com/yansenlei/dsh-plugin-telegram-bridge" target="_blank" rel="noopener">telegram-bridge · TG 遥控 ↗</a>
+        <a href="https://github.com/deepseek-ai/deepseek-harness" target="_blank" rel="noopener">deepseek-harness 上游 ↗</a>
+        <a href="https://www.deepseek.com/harness/" target="_blank" rel="noopener">DeepSeek 官方 Harness ↗</a>
+      </div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="disclaimer">
+      <b>版权与免责声明：</b>DeepSeek Harness Desktop 为社区开源项目（MIT License），由第三方开发者维护，
+      <b>并非 DeepSeek 官方产品</b>，与 DeepSeek（深度求索）无隶属、赞助或背书关系。
+      「DeepSeek」「DeepSeek Harness」及相关标识的名称与商标归其权利方所有，本项目与页面仅以兼容性说明为目的使用，
+      不构成任何官方授权或保证。项目基于 MIT 许可的上游开源项目
+      <a href="https://github.com/deepseek-ai/deepseek-harness" target="_blank" rel="noopener" style="color:var(--blue-light)">deepseek-ai/deepseek-harness</a>
+      构建，上游代码版权与许可归其原作者所有。使用前请阅读并遵守上游项目许可条款。
+    </div>
+    <div class="fine">
+      <span>© <span id="year"></span> DeepSeek Harness Desktop Community · MIT License</span>
+      <span>页面托管：Gitee Pages（国内加速）· 安装包：国内镜像 + GitHub Releases</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =====================================================
+     ① 下载配置 —— 发新版时只需改这里（部署指南：DEPLOY_CN.md）
+     ===================================================== */
+  var CFG = {
+    latest: '0.2.4',          // 当前最新版本号
+    // 国内镜像根 URL（阿里云 OSS / 腾讯云 COS）。留空 = 直连 GitHub Releases。
+    // 例如: 'https://your-bucket.oss-cn-hangzhou.aliyuncs.com/dsh-desktop'
+    mirrorBase: '',
+
+    windows: {
+      ver: '0.2.4',
+      exe: 'DeepSeek-Harness-Desktop-Setup-0.2.4.exe',
+      size: '145 MB'
+    },
+    macApple: {                // Apple Silicon（M1–M4）
+      ver: '0.2.4',
+      dmg: 'DeepSeek-Harness-Desktop-0.2.4-arm64.dmg',
+      zip: 'DeepSeek-Harness-Desktop-0.2.4-arm64.zip',
+      dmgSize: '154 MB',
+      zipSize: '174 MB'
+    },
+    macIntel: {                // Intel（x64）—— 目前最新可用为 v0.2.2
+      ver: '0.2.2',
+      dmg: 'DeepSeek-Harness-Desktop-0.2.2-x64.dmg',
+      zip: 'DeepSeek-Harness-Desktop-0.2.2-x64.zip',
+      dmgSize: '149 MB',
+      zipSize: '163 MB',
+      note: 'Intel 版最新可用为 v0.2.2（v0.2.3+ 暂缓 Intel 构建，恢复后此处自动更新）'
+    },
+
+    /* 自动获取最新版本信息的来源（按顺序尝试，超时 4.5s 换下一个）。
+       第一个是部署目录下的 latest.json（CI 发版时自动生成，也可手动放）；
+       jsDelivr / Gitee raw 为国内可访问的 CDN 镜像。 */
+    versionSources: [
+      'latest.json',
+      'https://cdn.jsdelivr.net/gh/yansenlei/dsh-desktop@main/site/latest.json',
+      'https://raw.githubusercontent.com/yansenlei/dsh-desktop/main/site/latest.json'
+    ]
+  };
+
+  var GH = 'https://github.com/yansenlei/dsh-desktop/releases/download/v';
+  var mirrorBase = CFG.mirrorBase ? CFG.mirrorBase.replace(/\/+$/, '') : '';
+  function gh(ver, file) { return GH + ver + '/' + file; }
+  function primary(file, ver) { return mirrorBase ? mirrorBase + '/' + file : gh(ver, file); }
+
+  var $ = function (s) { return document.querySelector(s); };
+  function setLink(id, ver, file) {           /* 主按钮：镜像优先 */
+    var el = $(id);
+    if (!el) return;
+    el.href = primary(file, ver);
+    el.title = '下载 ' + file;
+  }
+  function setGh(id, ver, file) {            /* 备用线路：永远直连 GitHub */
+    var el = $(id);
+    if (!el) return;
+    el.href = gh(ver, file);
+    el.title = 'GitHub 下载 ' + file;
+  }
+
+  /* 填入版本 / 大小 / 链接（初始化用内置 CFG，之后可被 latest.json 覆盖） */
+  function renderConfig(cfg) {
+    $('#ver-pill').textContent = 'v' + cfg.latest;
+    $('#win-ver').textContent = 'v' + cfg.windows.ver;
+    $('#win-size').textContent = cfg.windows.size + ' · ' + cfg.windows.exe;
+    setLink('#win-primary', cfg.windows.ver, cfg.windows.exe);
+    setGh('#win-alt', cfg.windows.ver, cfg.windows.exe);
+
+    $('#aa-meta').textContent = 'v' + cfg.macApple.ver + ' · 推荐（新款 Mac）';
+    $('#aa-ver').textContent = 'v' + cfg.macApple.ver;
+    $('#aa-size').textContent = cfg.macApple.dmgSize;
+    setLink('#mac-aa-primary', cfg.macApple.ver, cfg.macApple.dmg);
+    setLink('#mac-aa-zip', cfg.macApple.ver, cfg.macApple.zip);
+    setGh('#mac-aa-alt', cfg.macApple.ver, cfg.macApple.dmg);
+
+    $('#ai-meta').textContent = 'v' + cfg.macIntel.ver;
+    $('#ai-ver').textContent = 'v' + cfg.macIntel.ver;
+    $('#ai-size').textContent = cfg.macIntel.dmgSize;
+    $('#ai-note').textContent = cfg.macIntel.note;
+    setLink('#mac-ai-primary', cfg.macIntel.ver, cfg.macIntel.dmg);
+    setLink('#mac-ai-zip', cfg.macIntel.ver, cfg.macIntel.zip);
+    setGh('#mac-ai-alt', cfg.macIntel.ver, cfg.macIntel.dmg);
+  }
+  renderConfig(CFG);
+
+  if (mirrorBase) $('#mirrorNote').classList.add('mirror-on');
+
+  /* 自动获取最新版本信息：多源依次尝试，成功则刷新页面数据 */
+  (function fetchLatest() {
+    if (typeof fetch !== 'function') return;
+    var sources = CFG.versionSources || ['latest.json'];
+    var i = 0;
+    function next() {
+      if (i >= sources.length) return;
+      var url = sources[i++];
+      var ctl = ('AbortController' in window) ? new AbortController() : null;
+      var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 4500);
+      fetch(url, { signal: ctl ? ctl.signal : undefined, cache: 'no-store' })
+        .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+        .then(function (v) {
+          clearTimeout(timer);
+          if (v && v.windows && v.macApple && v.macIntel) {
+            renderConfig(v);
+            var note = document.getElementById('freshNote');
+            if (note) {
+              var isNew = String(v.latest) !== String(CFG.latest);
+              note.hidden = !isNew;
+              if (isNew) {
+                note.innerHTML = '已检测到最新版本 <b>v' + v.latest + '</b> —— 若国内线路下载失败，请使用按钮下方的「GitHub 线路」（新包可能尚未上传国内镜像）。';
+              }
+            }
+          }
+        })
+        .catch(function () { clearTimeout(timer); next(); });
+    }
+    next();
+  })();
+
+  /* =====================================================
+     ② 操作系统自动识别
+     ===================================================== */
+  function detectOS() {
+    var ua = navigator.userAgent || '';
+    var plat = '';
+    try { plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || ''; } catch (e) {}
+    if (/android/i.test(ua)) return 'android';
+    if (/iphone|ipad|ipod/i.test(ua)) return 'ios';
+    if (/windows|win32|win64/i.test(ua) || /win/i.test(plat)) return 'windows';
+    if (/macintosh|mac os x/i.test(ua) || /mac/i.test(plat)) return 'macos';
+    if (/linux|x11/i.test(ua) || /linux/i.test(plat)) return 'linux';
+    return null;
+  }
+  function banner(html, badge) {
+    $('#osBannerText').innerHTML = html;
+    if (badge) $('#osBannerBadge').textContent = badge;
+  }
+  function markCard(os) {
+    var card = $('#card-' + os);
+    if (!card) return;
+    document.querySelectorAll('.card').forEach(function (c) { c.classList.remove('os-active'); });
+    card.classList.add('os-active');
+    var q = document.querySelector('#download');
+    if (q && window.scrollY < 260 && !/^#/.test(location.hash)) {
+      q.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+  function markArch(arch) {
+    if (arch !== 'arm64' && arch !== 'x64') return;
+    document.querySelectorAll('.arch-group').forEach(function (g) { g.classList.remove('arch-active'); });
+    var el = $('#arch-' + arch);
+    if (el) el.classList.add('arch-active');
+    return arch;
+  }
+
+  var os = detectOS();
+  var bannerText = {
+    windows: '已识别：<b>Windows</b> —— 已为您高亮推荐安装包',
+    macos: '已识别：<b>macOS</b> —— 请根据芯片选择（默认 Apple Silicon）',
+    linux: '已识别：<b>Linux</b> —— 安装包尚未发布，可先用 npx 快速体验',
+    ios: '检测到 <b>手机/iPad</b> —— 这是桌面软件，请用电脑访问本页下载',
+    android: '检测到 <b>手机</b> —— 这是桌面软件，请用电脑访问本页下载'
+  };
+  banner(bannerText[os] || '未能识别系统 —— 请手动选择下方平台', os ? 'DETECTED · ' + os.toUpperCase() : 'MANUAL');
+
+  if (os === 'windows') markCard('windows');
+  else if (os === 'macos') {
+    markCard('macos');
+    /* Chrome/Edge 上可通过 High Entropy Values 拿到 CPU 架构，进一步高亮具体芯片按钮 */
+    var uad = navigator.userAgentData;
+    if (uad && typeof uad.getHighEntropyValues === 'function') {
+      uad.getHighEntropyValues(['architecture']).then(function (h) {
+        var a = (h && h.architecture) || '';
+        if (a === 'arm' || a === 'arm64') {
+          markArch('arm64');
+          banner('已识别：<b>macOS · Apple Silicon</b> —— 已为您高亮 M 芯片版本', 'DETECTED · ARM64');
+        } else if (a.indexOf('x86') === 0) {
+          markArch('x64');
+          banner('已识别：<b>macOS · Intel</b> —— 已为您高亮 Intel 版本', 'DETECTED · X64');
+        }
+      }).catch(function () {});
+    }
+  } else if (os === 'linux') markCard('linux');
+
+  /* =====================================================
+     ③ 背景动效：粒子（全页 + Hero 卡片内）+ 鼠标互动 + 网格视差
+     ===================================================== */
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var finePointer = window.matchMedia && window.matchMedia('(pointer: fine)').matches;
+
+  /* 通用粒子场。opts.local=true 时鼠标坐标相对 canvas 自身（用于 Hero 卡片内层） */
+  function initParticles(canvas, opts) {
+    opts = opts || {};
+    var ctx = null;
+    try { ctx = canvas.getContext('2d'); } catch (e) {}
+    if (!ctx) return;
+    var DPR = Math.min(window.devicePixelRatio || 1, 2);
+    var W = 0, H = 0, pts = [];
+    var mouse = { x: -9999, y: -9999, t: 0 };
+    var rect = { left: 0, top: 0 };
+    function resize() {
+      var w, h;
+      if (opts.local) {
+        var r = canvas.getBoundingClientRect();
+        rect.left = r.left; rect.top = r.top;
+        w = Math.min(20000, Math.max(1, r.width)); h = Math.min(20000, Math.max(1, r.height));
+      } else {
+        w = window.innerWidth; h = window.innerHeight;
+      }
+      W = w; H = h;
+      canvas.width = W * DPR; canvas.height = H * DPR;
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      var n = opts.count || Math.min(110, Math.round(W * H / 18000));
+      pts = [];
+      for (var i = 0; i < n; i++) {
+        pts.push({
+          x: Math.random() * W, y: Math.random() * H,
+          z: 0.25 + Math.random() * 0.75,
+          r: 0.5 + Math.random() * 1.1,
+          p: Math.random() * 6.28,
+          s: 0.3 + Math.random() * 0.9
+        });
+      }
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    if (typeof ResizeObserver !== 'undefined') {
+      var ro = new ResizeObserver(function () { resize(); });
+      ro.observe(canvas);
+    }
+    if (opts.local) {
+      window.addEventListener('scroll', function () {
+        var r = canvas.getBoundingClientRect();
+        rect.left = r.left; rect.top = r.top;
+      }, { passive: true });
+    }
+
+    var lastT = 0;
+    function frame(t) {
+      var dt = Math.min(50, t - lastT) || 16.7; lastT = t;
+      ctx.clearRect(0, 0, W, H);
+      var k = t / 1000;
+      var mActive = (t - mouse.t) < 3000 && finePointer;
+      var kk = dt / 16.7;
+      for (var i = 0; i < pts.length; i++) {
+        var P = pts[i];
+        P.y -= 0.016 * P.z * kk; P.x -= 0.006 * P.z * kk;
+        if (P.y < -4) { P.y = H + 4; P.x = Math.random() * W; }
+        if (P.x < -4) P.x = W + 4;
+        if (mActive) { /* 鼠标附近粒子被轻柔推开 */
+          var dx = P.x - mouse.x, dy = P.y - mouse.y, d2 = dx * dx + dy * dy;
+          if (d2 < 22500) {
+            var d = Math.sqrt(d2) || 1;
+            var f = (1 - d / 150) * 0.34 * kk;
+            P.x += (dx / d) * f; P.y += (dy / d) * f;
+          }
+        }
+        var a = (0.25 + 0.75 * Math.abs(Math.sin(k * P.s + P.p))) * (0.26 + 0.5 * P.z);
+        ctx.beginPath();
+        ctx.arc(P.x, P.y, P.r * P.z, 0, 6.2832);
+        ctx.fillStyle = 'rgba(122,152,255,' + a.toFixed(3) + ')';
+        ctx.fill();
+      }
+      for (var m = 0; m < pts.length; m++) { /* 粒子间细线 */
+        for (var n = m + 1; n < pts.length; n++) {
+          var ldx = pts[m].x - pts[n].x, ldy = pts[m].y - pts[n].y;
+          var ld2 = ldx * ldx + ldy * ldy;
+          if (ld2 < 12100) {
+            ctx.beginPath();
+            ctx.moveTo(pts[m].x, pts[m].y); ctx.lineTo(pts[n].x, pts[n].y);
+            ctx.strokeStyle = 'rgba(103,153,254,' + ((1 - Math.sqrt(ld2) / 110) * 0.05).toFixed(3) + ')';
+            ctx.stroke();
+          }
+        }
+      }
+      if (mActive) { /* 鼠标与附近粒子连线 */
+        var near = [];
+        for (var q = 0; q < pts.length; q++) {
+          var qx = pts[q].x - mouse.x, qy = pts[q].y - mouse.y, qd = qx * qx + qy * qy;
+          if (qd < 32400) near.push({ p: pts[q], d: Math.sqrt(qd) });
+        }
+        near.sort(function (a, b) { return a.d - b.d; });
+        for (var w = 0; w < Math.min(5, near.length); w++) {
+          ctx.beginPath();
+          ctx.moveTo(mouse.x, mouse.y); ctx.lineTo(near[w].p.x, near[w].p.y);
+          ctx.strokeStyle = 'rgba(103,153,254,' + ((1 - near[w].d / 180) * 0.17).toFixed(3) + ')';
+          ctx.stroke();
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    document.addEventListener('pointermove', function (e) {
+      if (opts.local) {
+        var r = canvas.getBoundingClientRect();
+        rect.left = r.left; rect.top = r.top;
+      }
+      mouse.x = opts.local ? e.clientX - rect.left : e.clientX;
+      mouse.y = opts.local ? e.clientY - rect.top : e.clientY;
+      mouse.t = performance.now();
+    }, { passive: true });
+  }
+
+  if (!reduceMotion) {
+    var bgCv = document.getElementById('bgfx');
+    if (bgCv) initParticles(bgCv, { local: false });
+    var heroCv = document.getElementById('bgfxHero');
+    /* Hero 卡片内粒子层：图片之上、文字之下（仅桌面鼠标设备） */
+    if (heroCv && finePointer && window.innerWidth > 1000) {
+      initParticles(heroCv, { local: true, count: 70 });
+    }
+  }
+
+  /* 光标光晕（全局 + Hero 卡片内）+ 网格视差（仅鼠标设备） */
+  var glow = document.getElementById('cursorGlow');
+  var heroGlow = document.getElementById('cursorGlowHero');
+  var heroCard = document.querySelector('.hero-card');
+  var grid = document.querySelector('.bg-grid');
+  if (!reduceMotion && finePointer) {
+    var gx = window.innerWidth / 2, gy = window.innerHeight * 0.3;
+    var tx = gx, ty = gy, seen = false;
+    var heroRect = { left: 0, top: 0 };
+    function updateHeroRect() {
+      if (!heroCard) return;
+      var r = heroCard.getBoundingClientRect();
+      heroRect.left = r.left; heroRect.top = r.top;
+    }
+    updateHeroRect();
+    window.addEventListener('resize', updateHeroRect);
+    window.addEventListener('scroll', updateHeroRect, { passive: true });
+    document.addEventListener('pointermove', function (e) {
+      tx = e.clientX; ty = e.clientY;
+      if (!seen) {
+        seen = true;
+        if (glow) glow.classList.add('on');
+        if (heroGlow) heroGlow.classList.add('on');
+      }
+    }, { passive: true });
+    (function gloop() {
+      gx += (tx - gx) * 0.09; gy += (ty - gy) * 0.09;
+      if (glow) { glow.style.setProperty('--mx', gx + 'px'); glow.style.setProperty('--my', gy + 'px'); }
+      if (heroGlow && heroCard) {
+        heroGlow.style.setProperty('--mx', (gx - heroRect.left) + 'px');
+        heroGlow.style.setProperty('--my', (gy - heroRect.top) + 'px');
+      }
+      if (grid) {
+        var rx = (tx / window.innerWidth - 0.5), ry = (ty / window.innerHeight - 0.5);
+        grid.style.transform = 'translate3d(' + (-rx * 14).toFixed(1) + 'px,' + (-ry * 10).toFixed(1) + 'px,0)';
+      }
+      requestAnimationFrame(gloop);
+    })();
+  }
+
+  /* 移动端汉堡菜单 */
+  var navToggle = document.getElementById('navToggle');
+  var navPanel = document.getElementById('navPanel');
+  if (navToggle && navPanel) {
+    function setMenu(open) {
+      navPanel.classList.toggle('open', open);
+      navToggle.classList.toggle('open', open);
+      navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      navToggle.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+    }
+    navToggle.addEventListener('click', function () {
+      setMenu(!navPanel.classList.contains('open'));
+    });
+    navPanel.querySelectorAll('a').forEach(function (a) {
+      a.addEventListener('click', function () { setMenu(false); });
+    });
+  }
+
+  /* =====================================================
+     ④ 滚动显现 / 导航 / 复制 / 手风琴
+     ===================================================== */
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (en) {
+      if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+
+  var nav = $('#nav');
+  window.addEventListener('scroll', function () {
+    nav.classList.toggle('scrolled', window.scrollY > 24);
+  }, { passive: true });
+
+  function copyText(txt, btn) {
+    var done = function () {
+      btn.textContent = '已复制 ✓';
+      btn.classList.add('ok');
+      setTimeout(function () { btn.textContent = '复制'; btn.classList.remove('ok'); }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(done, function () { fallbackCopy(); });
+    } else fallbackCopy();
+    function fallbackCopy() {
+      var ta = document.createElement('textarea');
+      ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta); done();
+    }
+  }
+  $('#copy-npx').addEventListener('click', function () { copyText('npx @deepseek-ai/dsh web', this); });
+
+  document.querySelectorAll('.faq-item').forEach(function (item) {
+    var q = item.querySelector('.faq-q');
+    var a = item.querySelector('.faq-a');
+    q.addEventListener('click', function () {
+      var open = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(function (o) {
+        o.classList.remove('open');
+        o.querySelector('.faq-a').style.maxHeight = '0px';
+      });
+      if (!open) {
+        item.classList.add('open');
+        a.style.maxHeight = a.scrollHeight + 'px';
+      }
+    });
+  });
+
+  $('#year').textContent = new Date().getFullYear();
+})();
+</script>
+</body>
+</html>

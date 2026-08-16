@@ -42,18 +42,7 @@
     "extraResources": [
       {
         "from": "runtime",
-        "to": "dsh-runtime",
-        "filter": [
-          "**/*",
-          "!**/*.map",
-          "!**/README*",
-          "!**/CHANGELOG*",
-          "!**/LICENSE*",
-          "!**/node_modules/**/test/**",
-          "!**/node_modules/**/tests/**",
-          "!**/node_modules/**/example*/**",
-          "!**/node_modules/**/*.md"
-        ]
+        "to": "dsh-runtime"
       },
       {
         "from": "build/icon.png",

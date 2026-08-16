@@ -9,6 +9,14 @@
 - 正式代码签名 + 公证（消除 SmartScreen「未知发布者」与 macOS「无法验证开发者」弹窗，需代码签名证书 / Apple 开发者证书 + 公证）
 - 更新体验优化（可选：迁移 electron-updater 实现差分更新 / sha512 校验 / 失败回滚）
 
+## [0.2.5] - 2026-08-16
+
+macOS 修复与功能：
+
+- **修复**：macOS 首次打开卡加载页后报「出现服务问题」——打包的 DSH 运行时缺 koffi 原生模块（`Cannot find the native Koffi module`，Windows 生成的 lockfile 不含 darwin 平台可选包，`--ignore-scripts` 又跳过 cnoke 预编译下载）。`prepare-runtime.mjs` 现在在 `npm ci` 后为当前平台补装 `@koromix/koffi-<platform>-<arch>` 预编译包（版本与已装 koffi 严格一致），并与 sharp 平台包合并为同一次 `npm install`（`--no-save` 对账会剪掉分次安装的平台包）
+- **功能**：macOS 托盘图标改为**模板图**（自动适配深/浅色菜单栏，浅色下不再"隐身"）；同一套菜单（显示主界面 / 在浏览器打开 / 设置 / 重启服务 / 退出）同时挂到 **Dock 图标右键菜单**，与 Windows 托盘右键菜单对应
+- **文档**：用户指南补充 macOS 托盘 / Dock 操作说明
+
 ## [0.2.4] - 2026-08-16
 
 macOS 修复：

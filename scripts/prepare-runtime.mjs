@@ -38,29 +38,85 @@ if (!existsSync(join(bundleDir, "node_modules", "@deepseek-ai", "dsh", "package.
   if (r.status !== 0) {
     throw new Error(`npm ci 失败 (code=${r.status})`);
   }
-  // 补装 sharp 当前平台的预编译二进制（ignore-scripts 跳过了 optional
-  // 平台依赖；npm rebuild 对 prebuilt 场景无效，需显式安装平台包）。
-  // 平台包：win32-x64 → @img/sharp-win32-x64；darwin → @img/sharp-darwin-{arm64,x64}
-  const imgScope = join(bundleDir, "node_modules", "@img");
+  // 补装 sharp / koffi 当前平台的预编译二进制。
+  // 原因：runtime/dsh/package-lock.json 在 Windows 机器上生成，其中只有
+  // win32-x64 的平台可选依赖有完整条目，darwin/linux 平台包仅出现在父包
+  // 的 optionalDependencies 里；npm ci 严格按 lockfile 安装，不会为其他
+  // 平台补装这些可选包，--ignore-scripts 又跳过了 koffi 的 install 脚本
+  // （cnoke 预编译下载兜底），导致 mac 等平台缺 koffi.node，dsh web 启动
+  // 即崩：Cannot find the native Koffi module。
+  // 注意：所有平台包必须合并在【同一次】npm install 里补装——`--no-save`
+  // 安装会重新对账依赖树，分多次执行时后一次会把前一次装上的平台包当作
+  // extraneous 剪掉（实测 koffi 补装会把 sharp 平台包删掉）。koffi 版本
+  // 必须与已装的 koffi 一致（wrapNative 校验版本，不一致会报 Mismatched
+  // native Koffi modules）。
   const sharpPkg = {
     win32: process.arch === "arm64" ? "@img/sharp-win32-arm64" : "@img/sharp-win32-x64",
     darwin: process.arch === "arm64" ? "@img/sharp-darwin-arm64" : "@img/sharp-darwin-x64",
     linux: process.arch === "arm64" ? "@img/sharp-linux-arm64" : "@img/sharp-linux-x64",
   }[process.platform];
-  if (sharpPkg) {
-    const mk = spawnSync(npmCmd, ["install", "--no-save", "--no-audit", "--no-fund", sharpPkg, "--cache", cacheDir], {
-      cwd: bundleDir,
-      stdio: "inherit",
-      shell: process.platform === "win32",
-      env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
-    });
-    if (mk.status !== 0) {
-      console.warn(`⚠ sharp 平台包 ${sharpPkg} 安装失败（make-icon 可能不可用），继续`);
-    } else {
-      console.log(`✔ sharp 平台二进制就绪: ${sharpPkg}`);
+
+  const koffiPkgJsonPath = join(bundleDir, "node_modules", "koffi", "package.json");
+  const koffiVer = existsSync(koffiPkgJsonPath)
+    ? JSON.parse(readFileSync(koffiPkgJsonPath, "utf8")).version
+    : null;
+  const koffiPkg = koffiVer
+    ? {
+        win32: process.arch === "arm64" ? "@koromix/koffi-win32-arm64" : "@koromix/koffi-win32-x64",
+        darwin: process.arch === "arm64" ? "@koromix/koffi-darwin-arm64" : "@koromix/koffi-darwin-x64",
+        linux: {
+          arm64: "@koromix/koffi-linux-arm64",
+          x64: "@koromix/koffi-linux-x64",
+          riscv64: "@koromix/koffi-linux-riscv64",
+          loong64: "@koromix/koffi-linux-loong64",
+        }[process.arch],
+      }[process.platform]
+    : null;
+  if (koffiVer && !koffiPkg) {
+    console.warn(`⚠ 无 koffi 平台包匹配 ${process.platform}/${process.arch}，跳过补装`);
+  } else if (!koffiVer) {
+    console.warn("⚠ 未找到 koffi 包，跳过平台二进制补装");
+  }
+
+  // 需要补装的包：[包名, 版本(可为空), 缺失是否致命]
+  const needPkgs = [];
+  if (sharpPkg && !existsSync(join(bundleDir, "node_modules", sharpPkg))) {
+    needPkgs.push({ spec: sharpPkg, fatal: false });
+  } else if (sharpPkg) {
+    console.log(`✔ sharp 平台二进制已存在: ${sharpPkg}`);
+  }
+  if (koffiPkg && !existsSync(join(bundleDir, "node_modules", koffiPkg))) {
+    needPkgs.push({ spec: `${koffiPkg}@${koffiVer}`, fatal: true });
+  } else if (koffiPkg) {
+    console.log(`✔ koffi 平台二进制已存在: ${koffiPkg}`);
+  }
+
+  if (needPkgs.length > 0) {
+    const r = spawnSync(
+      npmCmd,
+      ["install", "--no-save", "--no-audit", "--no-fund", "--ignore-scripts", ...needPkgs.map((p) => p.spec), "--cache", cacheDir],
+      {
+        cwd: bundleDir,
+        stdio: "inherit",
+        shell: process.platform === "win32",
+        env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
+      },
+    );
+    for (const p of needPkgs) {
+      // spec 形如 "@koromix/koffi-darwin-arm64@3.1.5"（或 "@img/sharp-darwin-arm64"）：
+      // 仅剥掉末尾的 @版本 部分，保留作用域包名。
+      const atIdx = p.spec.lastIndexOf("@");
+      const name = atIdx > 0 ? p.spec.slice(0, atIdx) : p.spec;
+      const ok = r.status === 0 && existsSync(join(bundleDir, "node_modules", name));
+      if (ok) {
+        console.log(`✔ 平台二进制就绪: ${p.spec}`);
+      } else if (p.fatal) {
+        throw new Error(`平台包 ${p.spec} 安装失败 (code=${r.status})，dsh web 将无法启动`);
+      } else {
+        console.warn(`⚠ 平台包 ${p.spec} 安装失败 (code=${r.status})（make-icon / 附件缩略图可能不可用），继续`);
+      }
     }
   }
-  void imgScope;
 } else {
   console.log("DSH 运行时已存在，跳过安装");
 }

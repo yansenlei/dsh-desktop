@@ -184,16 +184,24 @@ function main() {
   // ── 托盘 ─────────────────────────────────────────────────────────────
   function createTray() {
     const img = nativeImage.createFromPath(iconPath("tray.png"));
-    tray = new Tray(img.isEmpty() ? nativeImage.createEmpty() : img);
+    const trayImage = img.isEmpty() ? nativeImage.createEmpty() : img;
+    // macOS：设为模板图（按 alpha 通道渲染，自动适配深/浅色菜单栏）。
+    // tray.png 是白色鲸鱼，非模板时在浅色菜单栏上几乎看不见。
+    if (process.platform === "darwin" && !trayImage.isEmpty()) {
+      trayImage.setTemplateImage(true);
+    }
+    tray = new Tray(trayImage);
     tray.setToolTip("DeepSeek Harness Desktop");
     updateTrayMenu();
+    // Windows：单击托盘图标 → 显示主窗口；macOS：设置了 contextMenu 后
+    // 左/右键都是弹菜单（系统行为），无需 click 处理。
     tray.on("click", () => showMainWindow());
   }
 
   function updateTrayMenu() {
     const st = server.getStatus();
     const running = st.phase === "ready" || st.phase === "starting";
-    const menu = Menu.buildFromTemplate([
+    const template: Electron.MenuItemConstructorOptions[] = [
       { label: t("tray.showMain"), click: () => showMainWindow() },
       { label: running ? t("tray.openBrowser") : t("tray.openBrowserDisabled"), enabled: st.phase === "ready", click: () => { if (st.url) shell.openExternal(st.url); } },
       { type: "separator" },
@@ -201,8 +209,14 @@ function main() {
       { label: t("tray.restartService"), click: async () => { await server.stop(); await server.start(); } },
       { type: "separator" },
       { label: t("tray.quit"), click: () => { quitting = true; app.quit(); } },
-    ]);
-    tray?.setContextMenu(menu);
+    ];
+    tray?.setContextMenu(Menu.buildFromTemplate(template));
+    // macOS：同一套操作也挂到 Dock（程序坞）图标右键菜单——Windows 托盘
+    // 右键菜单的 mac 对应物。必须为 Dock 单独构建 Menu 实例（同一实例
+    // 不能同时作为托盘菜单与 Dock 菜单）。
+    if (process.platform === "darwin" && app.dock) {
+      app.dock.setMenu(Menu.buildFromTemplate(template));
+    }
   }
 
   function showMainWindow() {

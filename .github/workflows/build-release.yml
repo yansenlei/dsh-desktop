@@ -67,9 +67,9 @@ jobs:
             release/latest.yml
           if-no-files-found: error
 
-  build-macos:
-    name: Build macOS (x64 + arm64)
-    runs-on: macos-latest
+  build-macos-intel:
+    name: Build macOS Intel (x64)
+    runs-on: macos-13
     permissions:
       contents: write
     steps:
@@ -101,16 +101,65 @@ jobs:
       - name: Build bundled plugins
         run: node scripts/build-plugins.mjs
 
-      - name: Package dmg/zip
-        # --publish never: 只打包上传 artifact，Release 由下方 release job 统一发布
-        run: npx electron-builder --mac --publish never
+      - name: Package dmg/zip (x64)
+        # 只构建本机架构（x64），避免在单一 runner 上产出名不副实的 arm64 包
+        run: npx electron-builder --mac x64 --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload macOS artifacts
+      - name: Upload macOS Intel artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dsh-desktop-macos
+          name: dsh-desktop-macos-x64
+          path: |
+            release/*.dmg
+            release/*.zip
+          if-no-files-found: error
+
+  build-macos-arm:
+    name: Build macOS Apple Silicon (arm64)
+    runs-on: macos-14
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # package.json 里的 electronDownload.cache 指向本机开发缓存目录，
+      # CI runner 上不存在；移除后 electron-builder 用默认缓存。
+      - name: Neutralize local electron cache path
+        run: node -e "const fs=require('fs');const p='package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));if(j.build&&j.build.electronDownload){delete j.build.electronDownload.cache;}fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n');"
+
+      - name: Prepare DSH runtime
+        run: npm run prepare:runtime
+
+      # 图标文件不入库（.gitignore），CI 上需先生成
+      - name: Generate app icons
+        run: npm run icon
+
+      - name: Build app (esbuild)
+        run: npm run build
+
+      - name: Build bundled plugins
+        run: node scripts/build-plugins.mjs
+
+      - name: Package dmg/zip (arm64)
+        # 只构建本机架构（arm64），产出真正的 Apple Silicon 二进制
+        run: npx electron-builder --mac arm64 --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload macOS arm64 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dsh-desktop-macos-arm64
           path: |
             release/*.dmg
             release/*.zip
@@ -119,7 +168,7 @@ jobs:
 
   release:
     name: Publish GitHub Release
-    needs: [build-windows, build-macos]
+    needs: [build-windows, build-macos-intel, build-macos-arm]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:

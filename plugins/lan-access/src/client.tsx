@@ -31,9 +31,26 @@ const UI_TEXT = (() => {
     off: zh
       ? "局域网访问未开启\n请在桌面端「设置 → 局域网访问」中开启后刷新本页"
       : "LAN access is off\nEnable it in Desktop Settings → LAN Access, then refresh",
+    enableBtn: zh ? "一键开启局域网访问" : "Enable LAN Access",
+    enablingBtn: zh ? "正在开启…" : "Enabling…",
+    openSettingsBtn: zh ? "打开桌面端设置" : "Open Desktop Settings",
+    enableErr: zh ? "开启失败：" : "Failed to enable: ",
     fetchErr: zh ? "获取局域网信息失败：" : "Failed to get LAN info: ",
   };
 })();
+
+// ── 桌面端桥（仅桌面端窗口内可用；手机浏览器无此桥） ─────────────────
+interface DesktopBridge {
+  openSettings?: () => Promise<void>;
+  setSettings?: (patch: { lanAccess?: boolean }) => Promise<unknown>;
+  restartServer?: () => Promise<unknown>;
+}
+
+function getDesktopBridge(): DesktopBridge | null {
+  if (typeof window === "undefined") return null;
+  const b = (window as unknown as { dshDesktop?: DesktopBridge }).dshDesktop;
+  return b && typeof b.openSettings === "function" ? b : null;
+}
 
 // ── 样式注入（data-plugin-css 模式，黑白主题） ─────────────────────
 const css = `
@@ -76,6 +93,15 @@ const css = `
 .lan-access-off {
   margin:6px 0 0;text-align:center;color:#fbbf24;font-size:12px;line-height:1.7;
 }
+.lan-access-off-actions { display:flex;gap:8px;justify-content:center;margin-top:14px; }
+.lan-access-action {
+  border:1px solid rgba(255,255,255,.22);background:transparent;color:#e8e8ec;
+  font-size:12px;padding:7px 14px;border-radius:9px;cursor:pointer;line-height:1.4;
+}
+.lan-access-action:hover { background:rgba(255,255,255,.08); }
+.lan-access-action-primary { background:#3b82f6;border-color:#3b82f6;color:#fff;font-weight:600; }
+.lan-access-action-primary:hover { background:#2f6fe0; }
+.lan-access-action:disabled { opacity:.55;cursor:default; }
 .lan-access-err { text-align:center;color:#f87171;font-size:12px;margin-top:10px; }
 `;
 
@@ -102,6 +128,9 @@ function LanPanel({ onClose }: { onClose: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [info, setInfo] = useState<LanInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [enabling, setEnabling] = useState(false);
+  const [enableError, setEnableError] = useState<string | null>(null);
+  const bridge = getDesktopBridge();
 
   // 1) 获取局域网信息
   useEffect(() => {
@@ -121,6 +150,21 @@ function LanPanel({ onClose }: { onClose: () => void }) {
       cancelled = true;
     };
   }, []);
+
+  // 3) 一键开启：写入桌面端设置并重启服务（重启后桌面端会自动重载本页，
+  //    此时 /lan-info 将返回 enabled=true，重新打开面板即可看到二维码）。
+  const handleEnable = async () => {
+    if (!bridge?.setSettings || !bridge.restartServer) return;
+    setEnabling(true);
+    setEnableError(null);
+    try {
+      await bridge.setSettings({ lanAccess: true });
+      await bridge.restartServer();
+    } catch (err) {
+      setEnableError((err as Error)?.message ?? String(err));
+      setEnabling(false);
+    }
+  };
 
   // 2) 二维码渲染：独立 effect，等 info 就绪 + canvas 挂载后再画。
   //    若放在同一个 effect 里，fetch 完成时 canvasRef 可能尚未挂载
@@ -180,6 +224,30 @@ function LanPanel({ onClose }: { onClose: () => void }) {
               <br />
               {UI_TEXT.off.split("\n")[1]}
             </p>
+            {bridge && (
+              <div className="lan-access-off-actions">
+                <button
+                  className="lan-access-action lan-access-action-primary"
+                  onClick={() => void handleEnable()}
+                  disabled={enabling}
+                >
+                  {enabling ? UI_TEXT.enablingBtn : UI_TEXT.enableBtn}
+                </button>
+                <button
+                  className="lan-access-action"
+                  onClick={() => void bridge.openSettings?.()}
+                  disabled={enabling}
+                >
+                  {UI_TEXT.openSettingsBtn}
+                </button>
+              </div>
+            )}
+            {enableError && (
+              <p className="lan-access-err">
+                {UI_TEXT.enableErr}
+                {enableError}
+              </p>
+            )}
           </>
         )}
         {error && <p className="lan-access-err">{UI_TEXT.fetchErr}{error}</p>}

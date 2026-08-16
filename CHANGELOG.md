@@ -16,6 +16,7 @@
 - **功能**：托盘右键菜单（Windows）与菜单栏 / Dock 右键菜单（macOS）、设置中心新增四个网页跳转：**用户指南 / 问题反馈 / DSH 网站 / DSHD 网站**（设置中心新增「帮助与反馈」区块，链接集中在 `src/shared/links.ts`）
 - **文档**：README 顶部添加横幅图
 - **CI**：Intel mac 构建移出自动流水线（macos-13 公共 runner 长期排队，导致 workflow 永远显示未完成、看似"任务失败"）；改为手动 workflow_dispatch 时按需补产 x64 资产并补传到指定 tag 的 Release
+- **CI**：mac 打包改由 `afterPack` 钩子用 `codesign` 直接 ad-hoc 签名（electron-builder 内置 osx-sign 的并行 walk 在数万文件的 dsh-runtime 上触发 `EMFILE: too many open files`，上游 electron/osx-sign#286 修复尚未合并）；打包步骤同时提高 fd 上限
 
 ## [0.2.6] - 2026-08-16
 

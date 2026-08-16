@@ -82,10 +82,11 @@
       ],
       "icon": "build/icon.icns",
       "category": "public.app-category.developer-tools",
-      "identity": "-",
+      "identity": null,
       "hardenedRuntime": false,
       "artifactName": "DeepSeek-Harness-Desktop-${version}-${arch}.${ext}"
     },
+    "afterPack": "scripts/after-pack-sign.cjs",
     "dmg": {
       "artifactName": "DeepSeek-Harness-Desktop-${version}-${arch}.${ext}",
       "title": "DeepSeek Harness Desktop ${version}"

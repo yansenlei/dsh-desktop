@@ -38,17 +38,29 @@ if (!existsSync(join(bundleDir, "node_modules", "@deepseek-ai", "dsh", "package.
   if (r.status !== 0) {
     throw new Error(`npm ci 失败 (code=${r.status})`);
   }
-  // 补装 sharp 当前平台的预编译二进制（ignore-scripts 跳过了它；
-  // 不补则 make-icon 在 mac 上报 "Could not load the sharp module"）。
-  const sharpRebuild = spawnSync(npmCmd, ["rebuild", "sharp", "--ignore-scripts=false"], {
-    cwd: bundleDir,
-    stdio: "inherit",
-    shell: process.platform === "win32",
-    env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
-  });
-  if (sharpRebuild.status !== 0) {
-    console.warn("⚠ sharp rebuild 未完成（make-icon 可能不可用），继续");
+  // 补装 sharp 当前平台的预编译二进制（ignore-scripts 跳过了 optional
+  // 平台依赖；npm rebuild 对 prebuilt 场景无效，需显式安装平台包）。
+  // 平台包：win32-x64 → @img/sharp-win32-x64；darwin → @img/sharp-darwin-{arm64,x64}
+  const imgScope = join(bundleDir, "node_modules", "@img");
+  const sharpPkg = {
+    win32: process.arch === "arm64" ? "@img/sharp-win32-arm64" : "@img/sharp-win32-x64",
+    darwin: process.arch === "arm64" ? "@img/sharp-darwin-arm64" : "@img/sharp-darwin-x64",
+    linux: process.arch === "arm64" ? "@img/sharp-linux-arm64" : "@img/sharp-linux-x64",
+  }[process.platform];
+  if (sharpPkg) {
+    const mk = spawnSync(npmCmd, ["install", "--no-save", "--no-audit", "--no-fund", sharpPkg, "--cache", cacheDir], {
+      cwd: bundleDir,
+      stdio: "inherit",
+      shell: process.platform === "win32",
+      env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
+    });
+    if (mk.status !== 0) {
+      console.warn(`⚠ sharp 平台包 ${sharpPkg} 安装失败（make-icon 可能不可用），继续`);
+    } else {
+      console.log(`✔ sharp 平台二进制就绪: ${sharpPkg}`);
+    }
   }
+  void imgScope;
 } else {
   console.log("DSH 运行时已存在，跳过安装");
 }

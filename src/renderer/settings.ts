@@ -37,6 +37,7 @@ const el = {
   dataDirPath: $("data-dir-path"),
   aboutVersion: $("about-version"),
   aboutDshVersion: $("about-dsh-version"),
+  engineUpdateHint: $("engine-update-hint"),
   aboutElectron: $("about-electron"),
   aboutNode: $("about-node"),
   btnCheckUpdate: $<HTMLButtonElement>("btn-check-update"),
@@ -154,6 +155,13 @@ async function main() {
   el.aboutDshVersion.textContent = info.dshVersion ?? "-";
   el.aboutElectron.textContent = info.electron;
   el.aboutNode.textContent = info.node;
+  // 引擎更新提示：内置 Harness 引擎若落后于 npm 最新版，提示用户（静默失败）
+  window.dshDesktop.checkEngineUpdate().then((e) => {
+    if (e.latest && !e.upToDate && e.current) {
+      el.engineUpdateHint.hidden = false;
+      el.engineUpdateHint.textContent = t("settings.engineUpdateAvailable").replace("{v}", e.latest);
+    }
+  }).catch(() => { /* 静默 */ });
   el.btnCheckUpdate.addEventListener("click", async () => {
     const r = await window.dshDesktop.checkUpdate();
     if (r.latest && !r.upToDate) {

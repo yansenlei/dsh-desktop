@@ -99,6 +99,38 @@ async function downloadToFile(url: string, dest: string): Promise<void> {
   }
 }
 
+/** 查询 npm 上 @deepseek-ai/dsh 最新版本（引擎上游）。 */
+async function fetchEngineLatest(): Promise<string | null> {
+  try {
+    const res = await fetch("https://registry.npmjs.org/@deepseek-ai/dsh", {
+      signal: AbortSignal.timeout(8_000),
+      headers: { accept: "application/json" },
+    });
+    if (!res.ok) return null;
+    const doc = await res.json();
+    const latest = doc?.["dist-tags"]?.latest;
+    return typeof latest === "string" && latest ? latest : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 检查引擎更新：对比 runtime 内置 dsh 与 npm 最新版。 */
+export async function checkEngineUpdate(): Promise<{ current: string | null; latest: string | null; upToDate: boolean }> {
+  let current: string | null = null;
+  try {
+    const { readFileSync } = await import("node:fs");
+    const { join: pjoin } = await import("node:path");
+    const markerPath = pjoin(app.getAppPath(), "runtime", "dsh", ".dsh-runtime.json");
+    const marker = JSON.parse(readFileSync(markerPath, "utf8"));
+    current = typeof marker.dshVersion === "string" ? marker.dshVersion : null;
+  } catch {
+    /* runtime 标记缺失（开发态等）忽略 */
+  }
+  const latest = await fetchEngineLatest();
+  return { current, latest, upToDate: latest === null || latest === current };
+}
+
 export function registerIpc(deps: IpcDeps) {
   const { server, getAppInfo, openSettingsWindow } = deps;
 
@@ -158,6 +190,13 @@ export function registerIpc(deps: IpcDeps) {
   });
   ipcMain.handle(IPC.logsOpen, () => {
     shell.openPath(getLogDir());
+  });
+
+  // ── 引擎更新检查：内置 dsh vs npm 最新 ──────────────────────────────
+  ipcMain.handle(IPC.engineCheck, async () => {
+    const result = await checkEngineUpdate();
+    info(`引擎版本检查: current=${result.current ?? "?"} latest=${result.latest ?? "?"} upToDate=${result.upToDate}`);
+    return result;
   });
 
   // ── 更新检查：以 GitHub Releases 为更新源 ─────────────────────────

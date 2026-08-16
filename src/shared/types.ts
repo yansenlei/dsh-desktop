@@ -135,6 +135,7 @@ export const IPC = {
   updateDownload: "update:download",
   updateInstall: "update:install",
   updateProgress: "update:progress",
+  engineCheck: "engine:check",
   windowMinimize: "window:minimize",
   windowClose: "window:close",
   windowSetCloseToTray: "window:set-close-to-tray",

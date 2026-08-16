@@ -55,6 +55,8 @@ const api = {
   // 更新
   checkUpdate: (): Promise<{ current: string; latest: string | null; upToDate: boolean; feedConfigured: boolean }> =>
     ipcRenderer.invoke(IPC.updateCheck),
+  checkEngineUpdate: (): Promise<{ current: string | null; latest: string | null; upToDate: boolean }> =>
+    ipcRenderer.invoke(IPC.engineCheck),
   downloadUpdate: (): Promise<{ stage: string; percent: number | null; filePath?: string; error?: string }> =>
     ipcRenderer.invoke(IPC.updateDownload),
   installUpdate: (filePath?: string): Promise<{ ok: boolean; error?: string }> =>

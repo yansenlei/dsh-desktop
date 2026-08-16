@@ -103,7 +103,7 @@ jobs:
 
       - name: Package dmg/zip (x64)
         # 只构建本机架构（x64），避免在单一 runner 上产出名不副实的 arm64 包
-        run: npx electron-builder --mac x64 --publish never
+        run: npx electron-builder --mac --x64 --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -152,7 +152,7 @@ jobs:
 
       - name: Package dmg/zip (arm64)
         # 只构建本机架构（arm64），产出真正的 Apple Silicon 二进制
-        run: npx electron-builder --mac arm64 --publish never
+        run: npx electron-builder --mac --arm64 --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

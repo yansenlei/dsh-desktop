@@ -20,10 +20,10 @@ const UI_TEXT = (() => {
   const zh =
     typeof navigator !== "undefined" && /^zh/i.test(navigator.language);
   return {
-    btn: zh ? "手机访问" : "Phone Access",
-    btnTitle: zh ? "手机访问电脑（局域网）" : "Access your computer from your phone (LAN)",
+    btn: zh ? "局域网" : "LAN",
+    btnTitle: zh ? "局域网访问：手机扫码连接电脑（在家）" : "LAN access: scan to connect from your phone (at home)",
     closeLabel: zh ? "关闭" : "Close",
-    title: zh ? "手机访问电脑" : "Phone Access",
+    title: zh ? "局域网访问" : "LAN Access",
     subtitle: zh ? "手机扫码后，在局域网内随时连接你的电脑" : "Scan to connect to your computer over the LAN",
     tip: zh
       ? "请确保手机与电脑连接同一 Wi-Fi / 网络\n如无法打开，请检查电脑防火墙是否允许局域网访问"

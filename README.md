@@ -7,9 +7,13 @@
 
 **仓库**：[github.com/yansenlei/dsh-desktop](https://github.com/yansenlei/dsh-desktop)
 **下载**：安装包发布在 **GitHub Releases**（应用内「设置 → 检查更新」以 Releases 为更新源）。
-**插件**：内置插件各自独立维护、支持 npx 独立安装（桌面版内置版本与独立仓库同源同步）：
-- [dsh-plugin-lan-access](https://github.com/yansenlei/dsh-plugin-lan-access)（局域网二维码）· `npx dsh-plugin-lan-access`
-- [dsh-plugin-telegram-bridge](https://github.com/yansenlei/dsh-plugin-telegram-bridge)（Telegram 桥接）· `npx dsh-plugin-telegram-bridge`
+
+## 两个插件，两种"用手机操作电脑"的方式
+
+- 📱 **扫码局域网（lan-access）**：**在家里**，手机连上同一 Wi-Fi，扫一下二维码就能操作你的电脑。
+- 📱 **扫码 Telegram（telegram-bridge）**：**没在家的时候**，在自己的 Telegram 里跟机器人对话，随时操作你的电脑。
+
+插件源码独立开源，也可单独安装到任意 DSH 环境：`npx dsh-plugin-lan-access` / `npx dsh-plugin-telegram-bridge`（见 [dsh-plugin-lan-access](https://github.com/yansenlei/dsh-plugin-lan-access) / [dsh-plugin-telegram-bridge](https://github.com/yansenlei/dsh-plugin-telegram-bridge)）。
 
 ## 产品特性
 
@@ -17,8 +21,8 @@
 - **免装 Node.js**：应用自带 Electron（含 Node 24 运行时），DSH 服务在应用内以子进程运行，用户机器完全不需要安装 Node.js。
 - **内置 DSH 运行时**：`@deepseek-ai/dsh@0.1.0-rc.6` 与其全部依赖随安装包分发，离线可用。
 - **桌面壳体验**：暗黑科技风品牌启动页（旋转光环 logo + 启动进度 + 运行日志）→ 自动载入 Harness 工作台；系统托盘常驻（状态、打开/重启/设置/退出）。
-- **局域网访问（手机扫码）**：内置 `lan-access` 插件，Harness 侧边栏「手机访问」按钮弹出二维码（内容为局域网访问 URL）；手机连同一 Wi-Fi 扫码即可在局域网内随时连接自己的电脑。桌面端「设置 → 局域网访问」一键开关（默认关闭，开启时服务绑定 0.0.0.0 并自动放行本机局域网 IP，详见下文安全说明）。
-- **Telegram 接入（随时随地控制电脑）**：内置 `telegram-bridge` 插件，用户在自己的 Telegram 中与 Harness 对话、让 AI 操作电脑；配置引导（@BotFather 创建 Bot）+ t.me 二维码扫码直达。消息通过 DSH agents 服务接入，与浏览器工作台共用同一会话。
+- **📱 扫码局域网（在家）**：内置 `lan-access` 插件。手机连上家里/办公室的同一 Wi-Fi，扫 Harness 侧边栏「手机访问」的二维码，就能在手机上打开你的电脑工作台——躺着也能让 AI 干活。桌面端「设置 → 局域网访问」一键开关（默认关闭，仅本机访问，开启才向局域网开放，见下文安全说明）。
+- **📱 扫码 Telegram（出门在外）**：内置 `telegram-bridge` 插件。在自己的 Telegram 里加机器人（扫码直达），随时发消息让 AI 操作你的电脑——人不在电脑前，活照干。与浏览器工作台共用同一会话，聊天记录同步。
 - **环境一键补齐**：可选组件自动检测与一键安装 —— Python（winget 优先，回退官方安装包）、`dsh` 命令行工具（自动装 Node LTS + 全局 dsh）。
 - **数据自包含**：会话、配置、存储都放在应用数据目录，卸载不丢失；端口冲突自动顺延。
 - **跨平台**：Windows（NSIS 安装器）与 macOS（dmg/zip，x64 + Apple Silicon）均已适配；macOS 构建见 `docs/BUILD_MAC.md`。

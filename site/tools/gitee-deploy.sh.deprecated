@@ -60,3 +60,4 @@ fi
 
 echo
 echo "✔ 完成。页面地址：https://${GITEE_USER}.gitee.io/${REPO_NAME}/"
+# ⚠️ Gitee Pages 已停服（2025），此脚本废弃。页面部署请改用 DEPLOY_CN.md 第 1 步（OSS/COS 公共读）。

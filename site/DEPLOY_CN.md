@@ -1,49 +1,53 @@
 # DeepSeek Harness Desktop 下载页 · 国内部署指南
 
-让**页面**和**安装包**都在国内访问快的地方。整体架构：
+让**页面**和**安装包**都在国内访问快的地方。整体架构（2026 现状）：
 
 ```
-国内用户 ──▶ Gitee Pages（页面，免费，快）
-              └─▶ 阿里云 OSS / 腾讯云 COS（安装包，按量计费 ≈ 免费）
+国内用户 ──▶ 阿里云 OSS / 腾讯云 COS 公共读（页面 + 安装包同桶，免备案，按量 ≈ 免费）
+              （可选升级：有已备案域名时，页面迁到腾讯云 EdgeOne Pages 免费版 + 自定义域名）
 海外用户 ──▶ GitHub Releases（自动更新源，保持不变）
 ```
 
-| 环节 | 方案 | 费用 | 国内速度 |
-|---|---|---|---|
-| 下载页面 | **Gitee Pages** | 免费 | 快 |
-| 安装包国内加速 | **阿里云 OSS / 腾讯云 COS** | 按量计费，每次下载约几分钱，无月租 | 快 |
-| 自动更新源 | GitHub Releases（应用内「检查更新」） | 免费 | 不涉及（应用内可选，直连 GitHub） |
+> ⚠️ **方案演变说明**：Gitee Pages 已于 2025 年停服下架（AtomGit Pages 也已停止），
+> 本指南早前版本推荐的 Gitee Pages 方案作废。`tools/gitee-deploy.sh` 已废弃，勿再使用。
 
-> 为什么不把安装包也放 Gitee？Gitee 免费配额：**附件单文件 ≤ 100MB、仓库单文件 ≤ 50MB**，
-> 而安装包为 145–174MB，超限放不下。所以页面放 Gitee，大文件走对象存储。
+## 第 1 步 · 页面部署：OSS/COS 公共读（免费≈、免备案、国内快，今天就能上线）
 
----
+把页面 4 个文件（`index.html`、`latest.json`、`icon.png`、`deepseek-harness.png`）
+传到 OSS 公共读桶，直接访问对象 URL 即可 —— **无需 ICP 备案**：
 
-## 第 1 步 · 页面部署到 Gitee Pages（免费）
+```bash
+export OSS_ACCESS_KEY_ID=xxx
+export OSS_ACCESS_KEY_SECRET=xxx
+export OSS_BUCKET=dsh-download
+export OSS_REGION=oss-cn-hangzhou
 
-1. 注册 [gitee.com](https://gitee.com) 账号，完成**实名认证 + 绑定手机号**（Gitee Pages 服务要求）。
-2. 新建**公共**仓库，名称建议 `dsh-download`。
-3. 把本目录推送上去：
+node tools/oss-upload.mjs index.html latest.json icon.png deepseek-harness.png
+# 页面地址：https://dsh-download.oss-cn-hangzhou.aliyuncs.com/index.html
+```
 
-   ```bash
-   cd dsh-desktop-site
-   git init
-   git add .
-   git commit -m "feat: download page v1"
-   git remote add origin https://gitee.com/<你的用户名>/dsh-download.git
-   git push -u origin master
-   ```
+- URL 带文件名（无法像 Gitee Pages 那样自动解析目录首页），但完全可用、速度快、成本几乎为零
+  （页面几百 KB，即使每天上万次访问流量费也就几分钱/天）；
+- 页面里的相对引用（图片、latest.json）会自动指向同一桶，无需改任何路径；
+- 安装包同桶后，`mirrorBase` 直接填 `https://dsh-download.oss-cn-hangzhou.aliyuncs.com`（见第 3 步）。
 
-4. 仓库页面 → 「**服务**」→「**Gitee Pages**」→ 分支选 `master`、部署目录留空 → 点「**部署**」。
-5. 得到地址：`https://<你的用户名>.gitee.io/dsh-download/` ✅（gitee.io 为 Gitee 自有域名，**无需 ICP 备案**）。
-6. 之后每次更新页面：`git push` 后再点一次「**部署**」（免费版是手动部署；付费的 Pages Pro 可 push 自动部署）。
+### 备选：腾讯云 EdgeOne Pages 免费版（体验更好，但有门槛）
 
-**备选方案**（不推荐为主，写在这里备查）：
+- **免费额度**：40 个项目、5GB 存储、500 次构建/月、单文件 ≤25MB、200 个自定义域名 + 免费 SSL
+  （Edge Functions 300 万次/月等，商业化前配额宽松）；
+- **关键限制**：默认域名（`*.pages.edgeone.ai`）**中国大陆访问返回 401**；
+  - 选「中国大陆加速区」+ 自定义域名 → 国内最快，但**域名必须完成 ICP 备案**；
+  - 选「全球区（不含中国大陆）」→ 免备案，但大陆用户走海外节点，速度一般；
+- 适合：已有备案域名、想要漂亮 URL 和 Git 自动部署时再升级。
 
-- **Cloudflare Pages**：免费、全球 CDN，但大陆访问走海外节点，速度一般。
-- **GitHub Pages**：大陆访问经常不稳定。
-- **页面放 OSS/COS**：直接访问对象 URL 也能打开页面（无需备案），但 URL 带文件名、无默认首页，
-  且静态网站托管功能要求绑定已备案自定义域名 —— 不如 Gitee Pages。
+### 不推荐（大陆慢/不可用，仅作海外备用）
+
+| 方案 | 大陆现状 |
+|---|---|
+| Cloudflare Pages | `pages.dev` 域名被墙；自定义域名走海外节点，慢 |
+| Vercel / Netlify | 默认域名大陆基本不可访问 |
+| GitHub Pages | 大陆访问不稳定、慢 |
+| Gitee Pages / AtomGit Pages | ❌ 均已停服 |
 
 ---
 
@@ -103,13 +107,13 @@
 
 ```js
 var CFG = {
-  latest: '0.2.4',
+  latest: '0.2.6',
   mirrorBase: 'https://dsh-download.oss-cn-hangzhou.aliyuncs.com',  // ← 改成你的 Bucket 域名
   ...
 }
 ```
 
-然后 `git push` + Gitee Pages 重新「部署」。验证：
+改完后重新上传 `index.html` 到 OSS（`node tools/oss-upload.mjs index.html`）即可。验证：
 
 - 主下载按钮的 URL 变成 OSS 地址；
 - 每个按钮下方「**GitHub 线路**」仍指向 GitHub（海外/备用）；
@@ -168,14 +172,13 @@ GitHub Actions（打 v* tag 自动触发）
    `dsh-desktop` 仓库，例如放 `site/` 子目录；
 2. 把 `tools/release-latest-json.yml.example` 复制为仓库的 `.github/workflows/release-latest-json.yml`
    （目录名不同的话改一下脚本路径即可）；
-3. 页面 `CFG.versionSources` 默认已配好三源；若你在 Gitee 也镜像了仓库，可把
-   `https://gitee.com/<你的用户名>/dsh-desktop/raw/main/site/latest.json` 放到第一位（国内最快）。
+3. 页面 `CFG.versionSources` 默认已配好三源（同源 latest.json → jsDelivr → GitHub raw），无需改动。
 
 ### 5.3 每次发新版剩下的手工活（约 1 分钟）
 
 1. ~~改页面~~（已自动化，无需操作）；
 2. **上传新安装包到 OSS**（页面主按钮的国内线路依赖它，`tools/oss-upload.mjs` 一行命令）；
-3. Gitee Pages **无需重新部署**（页面 HTML 没变）。
+3. 重新上传页面文件到 OSS（`node tools/oss-upload.mjs index.html latest.json`，页面 HTML 没变时可只传 latest.json）。
 
 ---
 
@@ -184,7 +187,7 @@ GitHub Actions（打 v* tag 自动触发）
 1. GitHub Actions 打 `v*` tag → 自动发布 GitHub Release（应用内更新源，不用动）；
 2. 把新资产上传到 OSS（`tools/oss-upload.mjs` 一行命令）；
 3. 若未配置第 5 步的自动化：编辑 `index.html` 顶部 `CFG`（`latest`、各平台 `ver`/`size`/文件名）；
-4. 若改了页面：`git push` → Gitee Pages 点「部署」。
+4. 若改了页面：重新上传 `index.html` 到 OSS。
 
 > ⚠️ **Intel 包注意**：目前 v0.2.3 起未发布 macOS Intel(x64) 构建，页面 Intel 按钮暂指向
 > v0.2.2（有标注）。恢复 Intel 构建后，`latest.json` 会自动带上新 x64 资产并更新按钮。
@@ -193,8 +196,8 @@ GitHub Actions（打 v* tag 自动触发）
 
 ## 常见问题
 
-- **需要 ICP 备案吗？** 只要用 `*.gitee.io` 和 OSS/COS 默认域名，就不需要；绑定自定义域名才需要。
-- **Gitee Pages 为什么要求实名？** 国内平台合规要求，免费服务的前提。
+- **需要 ICP 备案吗？** 用 OSS/COS 默认域名（对象直链）不需要；EdgeOne Pages 大陆加速区或任何自定义域名都需要 ICP 备案。
+- **Gitee Pages 还能用吗？** 不能，已于 2025 年停服；本指南方案已切换为 OSS/COS 公共读。
 - **免费版 Pages 是手动部署**：push 后记得点「部署」，否则页面不更新。
 - **macOS「无法验证开发者」/ Windows SmartScreen**：未做商业签名所致，页面 FAQ 区已内置说明。
 - **社区版/版权声明在哪里改？** 已内置在 `index.html` 的四处：导航「社区版」标签、Hero 非官方提示、

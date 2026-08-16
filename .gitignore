@@ -2,7 +2,6 @@ node_modules/
 dist/
 release/
 runtime/dsh/node_modules/
-runtime/dsh/package-lock.json
 runtime/dsh/.dsh-runtime.json
 build/icon.ico
 build/icon.png

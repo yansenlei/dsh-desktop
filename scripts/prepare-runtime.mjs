@@ -19,7 +19,9 @@ const cacheDir = process.env.DSH_NPM_CACHE ?? join(root, "..", ".npm-cache");
 
 if (!existsSync(join(bundleDir, "node_modules", "@deepseek-ai", "dsh", "package.json"))) {
   console.log("安装 DSH 运行时依赖到 runtime/dsh/ …");
-  const args = ["install", "--no-audit", "--no-fund", "--omit=dev", "--ignore-scripts"];
+  // 用 npm ci：严格按已入库的 package-lock.json 安装，保证 CI 与本地
+  // 依赖树完全一致（js-yaml 等 hoist 位置不漂移）。
+  const args = ["ci", "--no-audit", "--no-fund", "--omit=dev", "--ignore-scripts"];
   if (existsSync(cacheDir)) args.push("--cache", cacheDir);
   // Windows 上 npm 是 .cmd 包装：execFileSync 直接执行会 ENOENT/EINVAL，
   // 必须走 shell（spawnSync + shell:true）才能在 Windows CI runner 上工作。
@@ -31,7 +33,7 @@ if (!existsSync(join(bundleDir, "node_modules", "@deepseek-ai", "dsh", "package.
     env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
   });
   if (r.status !== 0) {
-    throw new Error(`npm install 失败 (code=${r.status})`);
+    throw new Error(`npm ci 失败 (code=${r.status})`);
   }
 } else {
   console.log("DSH 运行时已存在，跳过安装");

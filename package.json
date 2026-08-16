@@ -1,7 +1,7 @@
 {
   "name": "dsh-desktop",
   "productName": "DeepSeek Harness Desktop",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "DeepSeek Harness 桌面版 —— 一键安装、开箱即用的本地 AI 助手工作台",
   "author": "DeepSeek Harness Desktop Team <dev@dsh-desktop.local>",
   "license": "MIT",

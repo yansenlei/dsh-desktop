@@ -1,5 +1,9 @@
 # DeepSeek Harness Desktop 下载页 · 国内部署指南
 
+> 🌐 **当前线上地址（GitHub Pages）：https://yansenlei.github.io/dsh-desktop/**
+> 已通过仓库 `.github/workflows/deploy-github-pages.yml` 自动部署（main 分支 `site/` 目录变更即重新发布）。
+> GitHub Pages 免费但大陆速度一般，追求国内高速请按第 1 步升级到 OSS/COS。
+
 让**页面**和**安装包**都在国内访问快的地方。整体架构（2026 现状）：
 
 ```

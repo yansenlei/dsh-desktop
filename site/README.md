@@ -1,5 +1,7 @@
 # dsh-desktop-site
 
+> 🌐 线上地址：https://yansenlei.github.io/dsh-desktop/（GitHub Pages 自动部署）
+
 DeepSeek Harness Desktop 的**下载页** —— 参考 [DeepSeek Harness 官方页面](https://www.deepseek.com/harness/)的极简暗色设计语言
 （近黑背景 `#0a0a0a` + 白色文字 + 品牌蓝 `#4d6bfe` 单色强调），单文件、零外部依赖。
 

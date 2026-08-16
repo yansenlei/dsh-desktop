@@ -41,9 +41,11 @@ const css = `
   display:flex;align-items:center;gap:8px;width:100%;height:38px;padding:0 12px;
   border:1px solid transparent;border-radius:10px;background:transparent;
   color:var(--dsw-alias-label-primary,#e8e8ec);font-size:13px;cursor:pointer;box-sizing:border-box;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
 }
 .lan-access-btn:hover { background:var(--dsw-alias-interactive-bg-hover,rgba(255,255,255,.07)); }
 .lan-access-btn svg { flex:none; }
+.lan-access-btn span { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
 .lan-access-overlay {
   position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.66);
   display:flex;align-items:center;justify-content:center;
@@ -203,7 +205,7 @@ function LanAccessButton() {
           <path d="M17 17h4v4h-4z" fill="currentColor" />
           <path d="M14 21v-1M21 14v-1" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
         </svg>
-        {UI_TEXT.btn}
+        <span>{UI_TEXT.btn}</span>
       </button>
       {open && <LanPanel onClose={() => setOpen(false)} />}
     </>

@@ -15,8 +15,8 @@ const PLUGIN_ID = "@dsh-desktop/telegram-bridge";
 const T = (() => {
   const zh = typeof navigator !== "undefined" && /^zh/i.test(navigator.language);
   return {
-    btn: zh ? "Telegram 接入" : "Telegram",
-    btnTitle: zh ? "在 Telegram 中对话控制电脑" : "Chat with your computer via Telegram",
+    btn: zh ? "Telegram" : "Telegram",
+    btnTitle: zh ? "在 Telegram 中对话控制电脑（出门在外）" : "Chat with your computer via Telegram (away from home)",
     close: zh ? "关闭" : "Close",
     title: zh ? "Telegram 接入" : "Telegram Bridge",
     subtitle: zh ? "在自己的 Telegram 里随时与 DeepSeek Harness 对话、控制电脑" : "Chat with DeepSeek Harness from your Telegram",
@@ -48,9 +48,11 @@ const css = `
   display:flex;align-items:center;gap:8px;width:100%;height:38px;padding:0 12px;
   border:1px solid transparent;border-radius:10px;background:transparent;
   color:var(--dsw-alias-label-primary,#e8e8ec);font-size:13px;cursor:pointer;box-sizing:border-box;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
 }
 .tg-btn:hover { background:var(--dsw-alias-interactive-bg-hover,rgba(255,255,255,.07)); }
 .tg-btn svg { flex:none; }
+.tg-btn span { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
 .tg-overlay {
   position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.66);
   display:flex;align-items:center;justify-content:center;
@@ -278,7 +280,7 @@ function TelegramButton() {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M21.9 4.1 18.7 19c-.2 1.1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.4-4.9L18 6.2c.4-.4-.1-.6-.6-.2L7.2 12.9l-4.8-1.5c-1-.3-1-1 .2-1.5L20.6 2.6c.9-.3 1.6.2 1.3 1.5z" />
         </svg>
-        {T.btn}
+        <span>{T.btn}</span>
       </button>
       {open && <TelegramPanel onClose={() => setOpen(false)} />}
     </>

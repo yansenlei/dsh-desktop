@@ -6,8 +6,15 @@
 
 ### 中优先级
 
-- 代码签名（消除 SmartScreen「未知发布者」与 macOS Gatekeeper 拦截，需代码签名证书 / Apple 开发者证书 + 公证）
+- 正式代码签名 + 公证（消除 SmartScreen「未知发布者」与 macOS「无法验证开发者」弹窗，需代码签名证书 / Apple 开发者证书 + 公证）
 - 更新体验优化（可选：迁移 electron-updater 实现差分更新 / sha512 校验 / 失败回滚）
+
+## [0.2.4] - 2026-08-16
+
+macOS 修复：
+
+- **修复**：macOS 构建时强制 **ad-hoc 签名**（`mac.identity: "-"` + `hardenedRuntime: false`）——此前打包产物残留 Electron 官方构建的过期签名（封印已失效），Gatekeeper 误报「已损坏，无法打开」；现在重新签名后封印与最终内容一致，首次打开仅需「右键 → 打开」或弹窗点「打开」，无需终端操作
+- **CI**：Release 发布不再等待 Intel mac 构建（公共 runner 稀缺导致长期排队阻塞发布），Windows + Apple Silicon 构建完成后即可发布，Intel 资产改为排到 runner 后尽力补传
 
 ## [0.2.3] - 2026-08-16
 

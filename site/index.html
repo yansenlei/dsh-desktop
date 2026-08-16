@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DeepSeek Harness Desktop · 社区版下载 —— 一键安装的本地 AI 工作台</title>
-<meta name="description" content="DeepSeek Harness Desktop 社区版（非官方）：面向非技术用户的一键安装桌面客户端，免装 Node.js，30 秒开箱即用。支持 Windows 与 macOS（Apple Silicon / Intel）。">
-<meta property="og:title" content="DeepSeek Harness Desktop · 社区版下载">
-<meta property="og:description" content="社区开源项目（非官方）：一键安装的本地 AI 工作台 —— 免装 Node.js，扫码操控，开箱即用。">
+<title id="page-title">DeepSeek Harness Desktop · 社区版下载 —— 一键安装的本地 AI 工作台</title>
+<meta name="description" id="meta-desc" content="DeepSeek Harness Desktop 社区版（非官方）：面向非技术用户的一键安装桌面客户端，免装 Node.js，30 秒开箱即用。支持 Windows 与 macOS（Apple Silicon / Intel）。">
+<meta property="og:title" id="og-title" content="DeepSeek Harness Desktop · 社区版下载">
+<meta property="og:description" id="og-desc" content="社区开源项目（非官方）：一键安装的本地 AI 工作台 —— 免装 Node.js，扫码操控，开箱即用。">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://yansenlei.github.io/dsh-desktop/deepseek-harness.png">
 <link rel="icon" href="icon.png" type="image/png">
@@ -98,6 +98,9 @@ nav .gh svg{width:15px;height:15px}
 .nav-toggle.open span:nth-child(1){transform:translateY(6px) rotate(45deg)}
 .nav-toggle.open span:nth-child(2){opacity:0}
 .nav-toggle.open span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+.lang-btn{flex:none;width:52px;height:34px;border-radius:9px;border:1px solid var(--line-strong);background:var(--panel);color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:color .18s,border-color .18s,background-color .18s;margin-left:2px}
+.lang-btn:hover{color:var(--text);border-color:var(--blue);background:rgba(77,107,254,.08)}
+@media (max-width:1000px){ .lang-btn{margin-left:auto} .nav-toggle{margin-left:0} }
 .nav-panel{display:none;position:fixed;top:64px;left:0;right:0;z-index:49;background:rgba(13,14,16,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:8px 24px 16px}
 .nav-panel.open{display:block}
 .nav-panel a{display:block;padding:12px 4px;font-size:15px;color:var(--muted);border-bottom:1px solid rgba(255,255,255,.05)}
@@ -307,26 +310,27 @@ footer .fine a:hover{color:var(--muted)}
 <nav id="nav">
   <div class="wrap">
     <a class="brand" href="#top">
-      <img class="mark" src="icon.png" alt="DeepSeek Harness Desktop 图标" width="28" height="28">
+      <img class="mark" src="icon.png" alt="DeepSeek Harness Desktop" width="28" height="28">
       <span>DeepSeek Harness Desktop</span>
-      <span class="community-tag">社区版</span>
+      <span class="community-tag" data-i18n="brand.community">社区版</span>
     </a>
     <div class="links">
-      <a href="#download">下载</a>
-      <a href="#features">特性</a>
-      <a href="#faq">安装说明</a>
+      <a href="#download" data-i18n="nav.download">下载</a>
+      <a href="#features" data-i18n="nav.features">特性</a>
+      <a href="#faq" data-i18n="nav.faq">安装说明</a>
     </div>
     <a class="gh" href="https://github.com/yansenlei/dsh-desktop" target="_blank" rel="noopener">
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
       GitHub
     </a>
+    <button class="lang-btn" id="langBtn" type="button" aria-label="Switch language">EN</button>
     <button class="nav-toggle" id="navToggle" type="button" aria-label="打开菜单" aria-expanded="false"><span></span><span></span><span></span></button>
   </div>
   <div class="nav-panel" id="navPanel">
-    <a href="#download">下载</a>
-    <a href="#features">特性</a>
-    <a href="#faq">安装说明</a>
-    <a href="https://github.com/yansenlei/dsh-desktop" target="_blank" rel="noopener">GitHub 仓库 ↗</a>
+    <a href="#download" data-i18n="nav.download">下载</a>
+    <a href="#features" data-i18n="nav.features">特性</a>
+    <a href="#faq" data-i18n="nav.faq">安装说明</a>
+    <a href="https://github.com/yansenlei/dsh-desktop" target="_blank" rel="noopener" data-i18n="nav.githubRepo">GitHub 仓库 ↗</a>
   </div>
 </nav>
 
@@ -341,35 +345,35 @@ footer .fine a:hover{color:var(--muted)}
       <div class="hero-glow" id="cursorGlowHero" aria-hidden="true"></div>
       <div class="hero-copy">
         <div class="brand-hero">
-          <img src="icon.png" alt="DeepSeek Harness Desktop 图标" width="42" height="42">
+          <img src="icon.png" alt="DeepSeek Harness Desktop" width="42" height="42">
           <div class="name">
             <b>DeepSeek Harness Desktop</b>
-            <span>community edition · <span style="font-size:11px;color:var(--blue-light);border:1px solid rgba(77,107,254,.35);background:rgba(77,107,254,.1);border-radius:6px;padding:0 7px;margin-left:4px">社区版</span></span>
+            <span>community edition · <span style="font-size:11px;color:var(--blue-light);border:1px solid rgba(77,107,254,.35);background:rgba(77,107,254,.1);border-radius:6px;padding:0 7px;margin-left:4px" data-i18n="brand.community">社区版</span></span>
           </div>
         </div>
-        <h1>一键安装的<br>本地 AI 工作台</h1>
-        <p class="lede">面向<b>非技术用户</b>的 DeepSeek Harness 桌面客户端 —— <b>免装 Node.js、无需命令行</b>，30 秒装好并跑起你的本地 AI 工作台。</p>
+        <h1 data-i18n-html="hero.title">一键安装的<br>本地 AI 工作台</h1>
+        <p class="lede" data-i18n-html="hero.lede">面向<b>非技术用户</b>的 DeepSeek Harness 桌面客户端 —— <b>免装 Node.js、无需命令行</b>，30 秒装好并跑起你的本地 AI 工作台。</p>
         <p class="note">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3v.5"/></svg>
-          <span>社区开源项目 · 非官方版本，与 DeepSeek（深度求索）无隶属关系</span>
+          <span data-i18n="hero.note">社区开源项目 · 非官方版本，与 DeepSeek（深度求索）无隶属关系</span>
         </p>
         <div class="cta-row">
           <a class="btn btn-primary" href="#download">
             <svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-            立即下载
+            <span data-i18n="hero.ctaDownload">立即下载</span>
           </a>
           <a class="btn btn-ghost" href="https://github.com/yansenlei/dsh-desktop" target="_blank" rel="noopener">
             <svg class="svg" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-            查看 GitHub
+            <span data-i18n="hero.ctaGithub">查看 GitHub</span>
           </a>
         </div>
         <div class="meta">
           <span class="ver-chip" id="ver-pill">v0.2.4</span>
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16"/></svg>Windows 10+ / macOS</span>
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>内置 DSH 运行时 · 离线可用</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16"/></svg><span data-i18n="hero.metaOs">Windows 10+ / macOS</span></span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg><span data-i18n="hero.metaRuntime">内置 DSH 运行时 · 离线可用</span></span>
           <a class="view-full" href="deepseek-harness.png" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6M11 8v6"/></svg>
-            完整截图 ↗
+            <span data-i18n="hero.screenshot">完整截图 ↗</span>
           </a>
         </div>
       </div>
@@ -382,8 +386,8 @@ footer .fine a:hover{color:var(--muted)}
   <div class="wrap">
     <div class="sec-head reveal">
       <span class="sec-label">DOWNLOAD</span>
-      <h2>立即下载</h2>
-      <p>已自动识别您的系统并高亮推荐安装包 —— 若识别有误，请手动选择。</p>
+      <h2 data-i18n="dl.title">立即下载</h2>
+      <p data-i18n="dl.sub">已自动识别您的系统并高亮推荐安装包 —— 若识别有误，请手动选择。</p>
     </div>
 
     <div class="os-banner reveal" id="osBanner">
@@ -395,7 +399,7 @@ footer .fine a:hover{color:var(--muted)}
     <div class="dl-grid">
       <!-- Windows -->
       <div class="card reveal" data-os="windows" id="card-windows">
-        <span class="os-tag">✓ 您的系统</span>
+        <span class="os-tag" data-i18n="dl.yourOs">✓ 您的系统</span>
         <div class="os-icon">
           <svg viewBox="0 0 24 24"><path d="M3 5.5L10.5 4.4v7.1H3zM11.5 4.2L21 3v8.5h-9.5zM3 12.6h7.5v7.1L3 18.6zM11.5 12.6H21V21l-9.5-1.2z"/></svg>
         </div>
@@ -404,25 +408,25 @@ footer .fine a:hover{color:var(--muted)}
         <div class="dl-row">
           <a class="btn btn-primary" id="win-primary" href="#" rel="noopener">
             <svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-            下载安装包 (.exe)
+            <span data-i18n="dl.winBtn">下载安装包 (.exe)</span>
             <span class="badge-ver" id="win-ver"></span>
           </a>
         </div>
         <div class="alt-row">
           <span id="win-size"></span>
-          <a id="win-alt" href="#" target="_blank" rel="noopener">GitHub 线路 ↗</a>
+          <a id="win-alt" href="#" target="_blank" rel="noopener" data-i18n="dl.ghRoute">GitHub 线路 ↗</a>
         </div>
-        <div class="tip">安装提示：若 SmartScreen 提示「<b>未知发布者</b>」，点击「<b>更多信息 → 仍要运行</b>」即可（未签名开源包）。</div>
+        <div class="tip" data-i18n-html="dl.winTip">安装提示：若 SmartScreen 提示「<b>未知发布者</b>」，点击「<b>更多信息 → 仍要运行</b>」即可（未签名开源包）。</div>
       </div>
 
       <!-- macOS -->
       <div class="card reveal" data-os="macos" id="card-macos">
-        <span class="os-tag">✓ 您的系统</span>
+        <span class="os-tag" data-i18n="dl.yourOs">✓ 您的系统</span>
         <div class="os-icon">
           <svg viewBox="0 0 24 24"><path d="M16.4 12.6c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.6-1.7-3.2-1.7-1.4-.1-2.7.8-3.4.8-.7 0-1.8-.8-3-.8-1.5 0-2.9.9-3.7 2.3-1.6 2.7-.4 6.8 1.1 9 .8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3.1.7c1.3 0 2.1-1.1 2.9-2.2.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.8zM14.3 5.8c.6-.8 1-1.8.9-2.9-.9 0-1.9.6-2.5 1.3-.6.6-1.1 1.7-.9 2.7 1 .1 2-.5 2.5-1.1z"/></svg>
         </div>
         <h3>macOS</h3>
-        <div class="sub">根据芯片选择对应版本</div>
+        <div class="sub" data-i18n="dl.macSub">根据芯片选择对应版本</div>
 
         <div class="arch-group" data-arch="arm64" id="arch-arm64">
           <div class="arch-name">Apple Silicon <span class="chip-tag">M1 · M2 · M3 · M4</span></div>
@@ -430,10 +434,10 @@ footer .fine a:hover{color:var(--muted)}
           <div class="dl-row">
             <a class="btn btn-primary" id="mac-aa-primary" href="#" rel="noopener">
               <svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-              下载 .dmg <span class="badge-ver" id="aa-ver"></span>
+              <span data-i18n="dl.dmgBtn">下载 .dmg</span> <span class="badge-ver" id="aa-ver"></span>
             </a>
           </div>
-          <div class="alt-row"><span id="aa-size"></span><a id="mac-aa-zip" href="#" target="_blank" rel="noopener">.zip 备用</a><a id="mac-aa-alt" href="#" target="_blank" rel="noopener">GitHub 线路 ↗</a></div>
+          <div class="alt-row"><span id="aa-size"></span><a id="mac-aa-zip" href="#" target="_blank" rel="noopener" data-i18n="dl.zipAlt">.zip 备用</a><a id="mac-aa-alt" href="#" target="_blank" rel="noopener" data-i18n="dl.ghRoute">GitHub 线路 ↗</a></div>
         </div>
 
         <div class="arch-group" data-arch="x64" id="arch-x64">
@@ -442,37 +446,37 @@ footer .fine a:hover{color:var(--muted)}
           <div class="dl-row">
             <a class="btn btn-ghost" id="mac-ai-primary" href="#" rel="noopener">
               <svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-              下载 .dmg <span class="badge-ver" id="ai-ver"></span>
+              <span data-i18n="dl.dmgBtn">下载 .dmg</span> <span class="badge-ver" id="ai-ver"></span>
             </a>
           </div>
-          <div class="alt-row"><span id="ai-size"></span><a id="mac-ai-zip" href="#" target="_blank" rel="noopener">.zip 备用</a><a id="mac-ai-alt" href="#" target="_blank" rel="noopener">GitHub 线路 ↗</a></div>
+          <div class="alt-row"><span id="ai-size"></span><a id="mac-ai-zip" href="#" target="_blank" rel="noopener" data-i18n="dl.zipAlt">.zip 备用</a><a id="mac-ai-alt" href="#" target="_blank" rel="noopener" data-i18n="dl.ghRoute">GitHub 线路 ↗</a></div>
           <div class="howto" id="ai-note"></div>
         </div>
 
-        <div class="howto">不确定芯片？点击左上角 <kbd></kbd> → 「<kbd>关于本机</kbd>」→ 查看「<kbd>芯片</kbd>」。</div>
-        <div class="tip">安装提示：首次打开提示「<b>无法验证开发者</b>」时，点击「<b>打开</b>」即可（仅需一次，v0.2.4+ 为 ad-hoc 签名）。</div>
+        <div class="howto" data-i18n-html="dl.chipHelp">不确定芯片？点击左上角 <kbd></kbd> → 「<kbd>关于本机</kbd>」→ 查看「<kbd>芯片</kbd>」。</div>
+        <div class="tip" data-i18n-html="dl.macTip">安装提示：首次打开提示「<b>无法验证开发者</b>」时，点击「<b>打开</b>」即可（仅需一次，v0.2.4+ 为 ad-hoc 签名）。</div>
       </div>
 
       <!-- Linux -->
       <div class="card reveal" data-os="linux" id="card-linux">
-        <span class="os-tag">✓ 您的系统</span>
+        <span class="os-tag" data-i18n="dl.yourOs">✓ 您的系统</span>
         <div class="os-icon">
           <svg viewBox="0 0 24 24"><path d="M4 5h16v12H4zM4 17l4-3 3 2 4-4 5 4"/></svg>
         </div>
         <h3>Linux</h3>
-        <div class="sub">安装包即将推出</div>
+        <div class="sub" data-i18n="dl.linuxSub">安装包即将推出</div>
         <div class="dl-row">
-          <button class="btn btn-ghost" disabled>暂未提供安装包</button>
+          <button class="btn btn-ghost" disabled data-i18n="dl.linuxBtn">暂未提供安装包</button>
         </div>
-        <div class="alt-row"><span>先用命令行快速体验：</span></div>
+        <div class="alt-row"><span data-i18n="dl.linuxTry">先用命令行快速体验：</span></div>
         <div class="linux-cmd"><span class="prompt">$ </span><span class="cmd">npx @deepseek-ai/dsh web</span><button class="copy-btn" id="copy-npx" type="button">复制</button></div>
-        <div class="tip">需要 Node.js LTS（仅此方式）；桌面安装包发布后会第一时间在此更新。</div>
+        <div class="tip" data-i18n="dl.linuxTip">需要 Node.js LTS（仅此方式）；桌面安装包发布后会第一时间在此更新。</div>
       </div>
     </div>
 
     <p class="mirror-note" id="mirrorNote">
-      <span class="off">当前<b>直连 GitHub Releases</b> —— 按部署指南配置国内镜像后，主按钮自动切换为国内加速线路。</span>
-      <span class="on">主按钮走<b>国内加速线路</b> · GitHub 线路供海外/备用。</span>
+      <span class="off" data-i18n-html="dl.mirrorOff">当前<b>直连 GitHub Releases</b> —— 按部署指南配置国内镜像后，主按钮自动切换为国内加速线路。</span>
+      <span class="on" data-i18n-html="dl.mirrorOn">主按钮走<b>国内加速线路</b> · GitHub 线路供海外/备用。</span>
     </p>
     <p class="mirror-note" id="freshNote" hidden></p>
   </div>
@@ -483,45 +487,45 @@ footer .fine a:hover{color:var(--muted)}
   <div class="wrap">
     <div class="sec-head reveal">
       <span class="sec-label">FEATURES</span>
-      <h2>为什么选择桌面版</h2>
-      <p>把「安装 Node.js、开终端、敲命令」全部省掉；更内置两款<b>手机遥控插件</b> —— 在家扫码、出门 Telegram，AI 工作台随时在线。</p>
+      <h2 data-i18n="feat.title">为什么选择桌面版</h2>
+      <p data-i18n-html="feat.sub">把「安装 Node.js、开终端、敲命令」全部省掉；更内置两款<b>手机遥控插件</b> —— 在家扫码、出门 Telegram，AI 工作台随时在线。</p>
     </div>
     <div class="feat-grid">
       <!-- 亮点：两款内置插件 -->
       <div class="feat feat-hero reveal">
-        <span class="feat-badge">内置插件 · 亮点</span>
+        <span class="feat-badge" data-i18n="feat.badge">内置插件 · 亮点</span>
         <div class="ic"><svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="20" rx="2"/><path d="M12 18v.01"/></svg></div>
-        <h3>扫码局域网 · 手机操作电脑</h3>
-        <p>在家或办公室：手机连上同一 Wi-Fi，扫工作台侧边栏「手机访问」二维码，躺着也能让 AI 干活。默认关闭、一键开启，安全说明内置。</p>
-        <div class="feat-foot"><code>lan-access</code><a href="https://github.com/yansenlei/dsh-plugin-lan-access" target="_blank" rel="noopener">插件源码 ↗</a></div>
+        <h3 data-i18n="feat.hero1Title">扫码局域网 · 手机操作电脑</h3>
+        <p data-i18n="feat.hero1Text">在家或办公室：手机连上同一 Wi-Fi，扫工作台侧边栏「手机访问」二维码，躺着也能让 AI 干活。默认关闭、一键开启，安全说明内置。</p>
+        <div class="feat-foot"><code>lan-access</code><a href="https://github.com/yansenlei/dsh-plugin-lan-access" target="_blank" rel="noopener" data-i18n="feat.src">插件源码 ↗</a></div>
       </div>
       <div class="feat feat-hero reveal">
-        <span class="feat-badge">内置插件 · 亮点</span>
+        <span class="feat-badge" data-i18n="feat.badge">内置插件 · 亮点</span>
         <div class="ic"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 0-3 6.7L21 21l-2.2-2.2"/></svg></div>
-        <h3>Telegram 遥控 · 出门在外照常干活</h3>
-        <p>没在家？在自己的 Telegram 里跟机器人对话，随时指挥你的电脑；与浏览器工作台共用同一会话，聊天记录实时同步。</p>
-        <div class="feat-foot"><code>telegram-bridge</code><a href="https://github.com/yansenlei/dsh-plugin-telegram-bridge" target="_blank" rel="noopener">插件源码 ↗</a></div>
+        <h3 data-i18n="feat.hero2Title">Telegram 遥控 · 出门在外照常干活</h3>
+        <p data-i18n="feat.hero2Text">没在家？在自己的 Telegram 里跟机器人对话，随时指挥你的电脑；与浏览器工作台共用同一会话，聊天记录实时同步。</p>
+        <div class="feat-foot"><code>telegram-bridge</code><a href="https://github.com/yansenlei/dsh-plugin-telegram-bridge" target="_blank" rel="noopener" data-i18n="feat.src">插件源码 ↗</a></div>
       </div>
       <!-- 其余特性 -->
       <div class="feat reveal">
         <div class="ic"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg></div>
-        <h3>一键安装</h3>
-        <p>NSIS 安装包双击即装：桌面/开始菜单快捷方式、卸载器齐全，装完自动启动，30 秒进入工作台。</p>
+        <h3 data-i18n="feat.f1Title">一键安装</h3>
+        <p data-i18n="feat.f1Text">NSIS 安装包双击即装：桌面/开始菜单快捷方式、卸载器齐全，装完自动启动，30 秒进入工作台。</p>
       </div>
       <div class="feat reveal">
         <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 3v18M16 3v18M3 8h18M3 16h18"/></svg></div>
-        <h3>免装 Node.js</h3>
-        <p>应用自带 Electron（内置 Node 24 运行时），DSH 服务在应用内以子进程运行 —— 电脑上什么都不用装。</p>
+        <h3 data-i18n="feat.f2Title">免装 Node.js</h3>
+        <p data-i18n="feat.f2Text">应用自带 Electron（内置 Node 24 运行时），DSH 服务在应用内以子进程运行 —— 电脑上什么都不用装。</p>
       </div>
       <div class="feat reveal">
         <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l8 3.5v5.2c0 4.6-3.2 8-8 9.3-4.8-1.3-8-4.7-8-9.3V6.5z"/><path d="M9 12l2 2 4-4"/></svg></div>
-        <h3>数据自包含</h3>
-        <p>会话、配置、存储都放在应用数据目录，卸载不丢数据；端口冲突自动顺延，服务崩溃自动重启。</p>
+        <h3 data-i18n="feat.f3Title">数据自包含</h3>
+        <p data-i18n="feat.f3Text">会话、配置、存储都放在应用数据目录，卸载不丢数据；端口冲突自动顺延，服务崩溃自动重启。</p>
       </div>
       <div class="feat reveal">
         <div class="ic"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3v6h-6"/></svg></div>
-        <h3>自动更新</h3>
-        <p>「设置 → 检查更新」一键下载并安装新版（以 GitHub Releases 为更新源），Windows / macOS 同步支持。</p>
+        <h3 data-i18n="feat.f4Title">自动更新</h3>
+        <p data-i18n="feat.f4Text">「设置 → 检查更新」一键下载并安装新版（以 GitHub Releases 为更新源），Windows / macOS 同步支持。</p>
       </div>
     </div>
   </div>
@@ -532,45 +536,45 @@ footer .fine a:hover{color:var(--muted)}
   <div class="wrap">
     <div class="sec-head reveal">
       <span class="sec-label">FAQ</span>
-      <h2>安装说明</h2>
-      <p>常见问题速查 —— 点击展开。</p>
+      <h2 data-i18n="faq.title">安装说明</h2>
+      <p data-i18n="faq.sub">常见问题速查 —— 点击展开。</p>
     </div>
     <div class="faq">
       <div class="faq-item reveal">
-        <button class="faq-q" type="button"><span class="n">01</span>macOS 提示「无法验证开发者」怎么办？<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
-        <div class="faq-a"><div class="inner">
+        <button class="faq-q" type="button"><span class="n">01</span><span data-i18n="faq.q1">macOS 提示「无法验证开发者」怎么办？</span><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="faq-a"><div class="inner" data-i18n-html="faq.a1">
           v0.2.4 起安装包为 <b>ad-hoc 签名</b>：首次打开提示「无法验证开发者」时，直接点击「<b>打开</b>」即可（或右键应用 → 打开），只需一次，无需终端。<br>
           若旧版本（v0.2.3 及更早）提示「已损坏，无法打开」，请改装 v0.2.4 及以上版本；或临时在终端执行：
           <span class="cmdline">codesign --force --sign - "/Applications/DeepSeek Harness Desktop.app"</span>
         </div></div>
       </div>
       <div class="faq-item reveal">
-        <button class="faq-q" type="button"><span class="n">02</span>Windows 提示「Windows 已保护你的电脑」？<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
-        <div class="faq-a"><div class="inner">
+        <button class="faq-q" type="button"><span class="n">02</span><span data-i18n="faq.q2">Windows 提示「Windows 已保护你的电脑」？</span><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="faq-a"><div class="inner" data-i18n-html="faq.a2">
           安装包未做商业代码签名，SmartScreen 会提示「未知发布者」：点击「<b>更多信息</b>」→「<b>仍要运行</b>」即可正常安装。来源请认准本页与 GitHub 仓库 <code>yansenlei/dsh-desktop</code> 的 Release。
         </div></div>
       </div>
       <div class="faq-item reveal">
-        <button class="faq-q" type="button"><span class="n">03</span>卸载会删掉我的数据吗？<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
-        <div class="faq-a"><div class="inner">
+        <button class="faq-q" type="button"><span class="n">03</span><span data-i18n="faq.q3">卸载会删掉我的数据吗？</span><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="faq-a"><div class="inner" data-i18n-html="faq.a3">
           不会。会话、配置、存储都保存在应用数据目录（Windows：<code>%APPDATA%\DeepSeek Harness Desktop</code>；macOS：<code>~/Library/Application Support/DeepSeek Harness Desktop</code>），卸载不删除，重装即恢复。
         </div></div>
       </div>
       <div class="faq-item reveal">
-        <button class="faq-q" type="button"><span class="n">04</span>默认端口被占用怎么办？<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
-        <div class="faq-a"><div class="inner">
+        <button class="faq-q" type="button"><span class="n">04</span><span data-i18n="faq.q4">默认端口被占用怎么办？</span><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="faq-a"><div class="inner" data-i18n-html="faq.a4">
           不需要处理。服务默认使用 <code>3080</code> 端口，被占用时<b>自动顺延</b>到下一个可用端口并照常启动。
         </div></div>
       </div>
       <div class="faq-item reveal">
-        <button class="faq-q" type="button"><span class="n">05</span>如何更新到新版本？<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
-        <div class="faq-a"><div class="inner">
+        <button class="faq-q" type="button"><span class="n">05</span><span data-i18n="faq.q5">如何更新到新版本？</span><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="faq-a"><div class="inner" data-i18n-html="faq.a5">
           应用内「<b>设置 → 检查更新</b>」：检测到新版本后一键「下载并安装」，Windows（静默安装）与 macOS（自动替换 .app 并重启）均无需手动操作。
         </div></div>
       </div>
       <div class="faq-item reveal">
-        <button class="faq-q" type="button"><span class="n">06</span>社区版与官方是什么关系？<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
-        <div class="faq-a"><div class="inner">
+        <button class="faq-q" type="button"><span class="n">06</span><span data-i18n="faq.q6">社区版与官方是什么关系？</span><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="faq-a"><div class="inner" data-i18n-html="faq.a6">
           本桌面客户端是<b>社区开源项目</b>（MIT 许可），由第三方开发者维护，<b>不是 DeepSeek 官方产品</b>，与 DeepSeek（深度求索）无隶属、赞助或背书关系。
           它基于 MIT 许可的上游开源项目 <code>deepseek-ai/deepseek-harness</code> 构建，内置的 Harness 运行时及其许可归属上游项目；「DeepSeek」「DeepSeek Harness」等名称与商标归其权利方所有，本页仅作兼容性说明用途。
           如需官方版本与技术支持，请访问官方渠道：<a href="https://www.deepseek.com/harness/" target="_blank" rel="noopener" style="color:var(--blue-light)">deepseek.com/harness ↗</a>
@@ -585,33 +589,33 @@ footer .fine a:hover{color:var(--muted)}
   <div class="wrap">
     <div class="col brand-col">
       <a class="brand" href="#top" style="margin-bottom:12px">
-        <img class="mark" src="icon.png" alt="DeepSeek Harness Desktop 图标" width="28" height="28">
+        <img class="mark" src="icon.png" alt="DeepSeek Harness Desktop" width="28" height="28">
         <span>DeepSeek Harness Desktop</span>
-        <span class="community-tag">社区版</span>
+        <span class="community-tag" data-i18n="brand.community">社区版</span>
       </a>
-      <p style="font-size:13px;color:var(--muted);max-width:360px;margin-top:12px">让没有技术背景的人，30 秒装好并用上 DeepSeek Harness —— 社区开源 · 免费 · 离线可用。</p>
+      <p style="font-size:13px;color:var(--muted);max-width:360px;margin-top:12px" data-i18n="footer.tagline">让没有技术背景的人，30 秒装好并用上 DeepSeek Harness —— 社区开源 · 免费 · 离线可用。</p>
     </div>
     <div class="col">
-      <h4>项目</h4>
+      <h4 data-i18n="footer.colProject">项目</h4>
       <div class="f-links">
-        <a href="https://github.com/yansenlei/dsh-desktop" target="_blank" rel="noopener">GitHub 仓库 ↗</a>
-        <a href="https://github.com/yansenlei/dsh-desktop/releases" target="_blank" rel="noopener">全部版本（Releases）↗</a>
-        <a href="https://github.com/yansenlei/dsh-desktop/blob/main/docs/USER_GUIDE.zh.md" target="_blank" rel="noopener">用户指南 ↗</a>
-        <a href="https://github.com/yansenlei/dsh-desktop/issues" target="_blank" rel="noopener">问题反馈 ↗</a>
+        <a href="https://github.com/yansenlei/dsh-desktop" target="_blank" rel="noopener" data-i18n="footer.githubRepo">GitHub 仓库 ↗</a>
+        <a href="https://github.com/yansenlei/dsh-desktop/releases" target="_blank" rel="noopener" data-i18n="footer.releases">全部版本（Releases）↗</a>
+        <a href="https://github.com/yansenlei/dsh-desktop/blob/main/docs/USER_GUIDE.zh.md" target="_blank" rel="noopener" data-i18n="footer.userGuide">用户指南 ↗</a>
+        <a href="https://github.com/yansenlei/dsh-desktop/issues" target="_blank" rel="noopener" data-i18n="footer.feedback">问题反馈 ↗</a>
       </div>
     </div>
     <div class="col">
-      <h4>相关资源</h4>
+      <h4 data-i18n="footer.colRes">相关资源</h4>
       <div class="f-links">
-        <a href="https://github.com/yansenlei/dsh-plugin-lan-access" target="_blank" rel="noopener">lan-access · 扫码局域网 ↗</a>
-        <a href="https://github.com/yansenlei/dsh-plugin-telegram-bridge" target="_blank" rel="noopener">telegram-bridge · TG 遥控 ↗</a>
-        <a href="https://github.com/deepseek-ai/deepseek-harness" target="_blank" rel="noopener">deepseek-harness 上游 ↗</a>
-        <a href="https://www.deepseek.com/harness/" target="_blank" rel="noopener">DeepSeek 官方 Harness ↗</a>
+        <a href="https://github.com/yansenlei/dsh-plugin-lan-access" target="_blank" rel="noopener">lan-access · <span data-i18n="footer.lanDesc">扫码局域网</span> ↗</a>
+        <a href="https://github.com/yansenlei/dsh-plugin-telegram-bridge" target="_blank" rel="noopener">telegram-bridge · <span data-i18n="footer.tgDesc">TG 遥控</span> ↗</a>
+        <a href="https://github.com/deepseek-ai/deepseek-harness" target="_blank" rel="noopener" data-i18n="footer.upstream">deepseek-harness 上游 ↗</a>
+        <a href="https://www.deepseek.com/harness/" target="_blank" rel="noopener" data-i18n="footer.official">DeepSeek 官方 Harness ↗</a>
       </div>
     </div>
   </div>
   <div class="wrap">
-    <div class="disclaimer">
+    <div class="disclaimer" data-i18n-html="footer.disclaimer">
       <b>版权与免责声明：</b>DeepSeek Harness Desktop 为社区开源项目（MIT License），由第三方开发者维护，
       <b>并非 DeepSeek 官方产品</b>，与 DeepSeek（深度求索）无隶属、赞助或背书关系。
       「DeepSeek」「DeepSeek Harness」及相关标识的名称与商标归其权利方所有，本项目与页面仅以兼容性说明为目的使用，
@@ -621,7 +625,7 @@ footer .fine a:hover{color:var(--muted)}
     </div>
     <div class="fine">
       <span>© <span id="year"></span> DeepSeek Harness Desktop Community · MIT License</span>
-      <span>页面托管：OSS/COS 公共读（国内加速）· 安装包：国内镜像 + GitHub Releases</span>
+      <span data-i18n="footer.fine">页面托管：OSS/COS 公共读（国内加速）· 安装包：国内镜像 + GitHub Releases</span>
     </div>
   </div>
 </footer>
@@ -676,6 +680,194 @@ footer .fine a:hover{color:var(--muted)}
   function primary(file, ver) { return mirrorBase ? mirrorBase + '/' + file : gh(ver, file); }
 
   var $ = function (s) { return document.querySelector(s); };
+
+  /* =====================================================
+     ⑤ 多语言（默认跟随系统；手动切换后记住选择）
+     ===================================================== */
+  function tpl(str, map) {
+    return String(str).replace(/\{(\w+)\}/g, function (_, k) { return map[k] != null ? map[k] : ''; });
+  }
+  function dictGet(d, path) {
+    return String(path).split('.').reduce(function (o, k) {
+      return o && typeof o === 'object' ? o[k] : undefined;
+    }, d);
+  }
+  var I18N = {
+    zh: {
+      doc: {
+        title: 'DeepSeek Harness Desktop · 社区版下载 —— 一键安装的本地 AI 工作台',
+        metaDesc: 'DeepSeek Harness Desktop 社区版（非官方）：面向非技术用户的一键安装桌面客户端，免装 Node.js，30 秒开箱即用。支持 Windows 与 macOS（Apple Silicon / Intel）。',
+        ogTitle: 'DeepSeek Harness Desktop · 社区版下载',
+        ogDesc: '社区开源项目（非官方）：一键安装的本地 AI 工作台 —— 免装 Node.js，扫码操控，开箱即用。'
+      },
+      brand: { community: '社区版' },
+      nav: { download: '下载', features: '特性', faq: '安装说明', githubRepo: 'GitHub 仓库 ↗', menuOpen: '打开菜单', menuClose: '关闭菜单' },
+      hero: {
+        title: '一键安装的<br>本地 AI 工作台',
+        lede: '面向<b>非技术用户</b>的 DeepSeek Harness 桌面客户端 —— <b>免装 Node.js、无需命令行</b>，30 秒装好并跑起你的本地 AI 工作台。',
+        note: '社区开源项目 · 非官方版本，与 DeepSeek（深度求索）无隶属关系',
+        ctaDownload: '立即下载', ctaGithub: '查看 GitHub',
+        metaOs: 'Windows 10+ / macOS', metaRuntime: '内置 DSH 运行时 · 离线可用', screenshot: '完整截图 ↗'
+      },
+      dl: {
+        title: '立即下载',
+        sub: '已自动识别您的系统并高亮推荐安装包 —— 若识别有误，请手动选择。',
+        yourOs: '✓ 您的系统',
+        winBtn: '下载安装包 (.exe)', ghRoute: 'GitHub 线路 ↗',
+        winTip: '安装提示：若 SmartScreen 提示「<b>未知发布者</b>」，点击「<b>更多信息 → 仍要运行</b>」即可（未签名开源包）。',
+        macSub: '根据芯片选择对应版本', dmgBtn: '下载 .dmg', zipAlt: '.zip 备用',
+        chipHelp: '不确定芯片？点击左上角 <kbd></kbd> → 「<kbd>关于本机</kbd>」→ 查看「<kbd>芯片</kbd>」。',
+        macTip: '安装提示：首次打开提示「<b>无法验证开发者</b>」时，点击「<b>打开</b>」即可（仅需一次，v0.2.4+ 为 ad-hoc 签名）。',
+        linuxSub: '安装包即将推出', linuxBtn: '暂未提供安装包', linuxTry: '先用命令行快速体验：',
+        linuxTip: '需要 Node.js LTS（仅此方式）；桌面安装包发布后会第一时间在此更新。',
+        mirrorOff: '当前<b>直连 GitHub Releases</b> —— 按部署指南配置国内镜像后，主按钮自动切换为国内加速线路。',
+        mirrorOn: '主按钮走<b>国内加速线路</b> · GitHub 线路供海外/备用。',
+        aaRecommended: 'v{v} · 推荐（新款 Mac）',
+        intelNote: 'Intel 版最新可用为 v{v}（v0.2.3+ 暂缓 Intel 构建，恢复后此处自动更新）',
+        freshNote: '已检测到最新版本 <b>v{v}</b> —— 若国内线路下载失败，请使用按钮下方的「GitHub 线路」（新包可能尚未上传国内镜像）。',
+        banner: {
+          windows: '已识别：<b>Windows</b> —— 已为您高亮推荐安装包',
+          macos: '已识别：<b>macOS</b> —— 请根据芯片选择（默认 Apple Silicon）',
+          'mac-arm64': '已识别：<b>macOS · Apple Silicon</b> —— 已为您高亮 M 芯片版本',
+          'mac-x64': '已识别：<b>macOS · Intel</b> —— 已为您高亮 Intel 版本',
+          linux: '已识别：<b>Linux</b> —— 安装包尚未发布，可先用 npx 快速体验',
+          ios: '检测到 <b>手机/iPad</b> —— 这是桌面软件，请用电脑访问本页下载',
+          android: '检测到 <b>手机</b> —— 这是桌面软件，请用电脑访问本页下载',
+          none: '未能识别系统 —— 请手动选择下方平台'
+        }
+      },
+      feat: {
+        title: '为什么选择桌面版',
+        sub: '把「安装 Node.js、开终端、敲命令」全部省掉；更内置两款<b>手机遥控插件</b> —— 在家扫码、出门 Telegram，AI 工作台随时在线。',
+        badge: '内置插件 · 亮点',
+        hero1Title: '扫码局域网 · 手机操作电脑',
+        hero1Text: '在家或办公室：手机连上同一 Wi-Fi，扫工作台侧边栏「手机访问」二维码，躺着也能让 AI 干活。默认关闭、一键开启，安全说明内置。',
+        hero2Title: 'Telegram 遥控 · 出门在外照常干活',
+        hero2Text: '没在家？在自己的 Telegram 里跟机器人对话，随时指挥你的电脑；与浏览器工作台共用同一会话，聊天记录实时同步。',
+        src: '插件源码 ↗',
+        f1Title: '一键安装', f1Text: 'NSIS 安装包双击即装：桌面/开始菜单快捷方式、卸载器齐全，装完自动启动，30 秒进入工作台。',
+        f2Title: '免装 Node.js', f2Text: '应用自带 Electron（内置 Node 24 运行时），DSH 服务在应用内以子进程运行 —— 电脑上什么都不用装。',
+        f3Title: '数据自包含', f3Text: '会话、配置、存储都放在应用数据目录，卸载不丢数据；端口冲突自动顺延，服务崩溃自动重启。',
+        f4Title: '自动更新', f4Text: '「设置 → 检查更新」一键下载并安装新版（以 GitHub Releases 为更新源），Windows / macOS 同步支持。'
+      },
+      faq: {
+        title: '安装说明', sub: '常见问题速查 —— 点击展开。',
+        q1: 'macOS 提示「无法验证开发者」怎么办？',
+        a1: 'v0.2.4 起安装包为 <b>ad-hoc 签名</b>：首次打开提示「无法验证开发者」时，直接点击「<b>打开</b>」即可（或右键应用 → 打开），只需一次，无需终端。<br>若旧版本（v0.2.3 及更早）提示「已损坏，无法打开」，请改装 v0.2.4 及以上版本；或临时在终端执行：<span class="cmdline">codesign --force --sign - "/Applications/DeepSeek Harness Desktop.app"</span>',
+        q2: 'Windows 提示「Windows 已保护你的电脑」？',
+        a2: '安装包未做商业代码签名，SmartScreen 会提示「未知发布者」：点击「<b>更多信息</b>」→「<b>仍要运行</b>」即可正常安装。来源请认准本页与 GitHub 仓库 <code>yansenlei/dsh-desktop</code> 的 Release。',
+        q3: '卸载会删掉我的数据吗？',
+        a3: '不会。会话、配置、存储都保存在应用数据目录（Windows：<code>%APPDATA%\\DeepSeek Harness Desktop</code>；macOS：<code>~/Library/Application Support/DeepSeek Harness Desktop</code>），卸载不删除，重装即恢复。',
+        q4: '默认端口被占用怎么办？',
+        a4: '不需要处理。服务默认使用 <code>3080</code> 端口，被占用时<b>自动顺延</b>到下一个可用端口并照常启动。',
+        q5: '如何更新到新版本？',
+        a5: '应用内「<b>设置 → 检查更新</b>」：检测到新版本后一键「下载并安装」，Windows（静默安装）与 macOS（自动替换 .app 并重启）均无需手动操作。',
+        q6: '社区版与官方是什么关系？',
+        a6: '本桌面客户端是<b>社区开源项目</b>（MIT 许可），由第三方开发者维护，<b>不是 DeepSeek 官方产品</b>，与 DeepSeek（深度求索）无隶属、赞助或背书关系。它基于 MIT 许可的上游开源项目 <code>deepseek-ai/deepseek-harness</code> 构建，内置的 Harness 运行时及其许可归属上游项目；「DeepSeek」「DeepSeek Harness」等名称与商标归其权利方所有，本页仅作兼容性说明用途。如需官方版本与技术支持，请访问官方渠道：<a href="https://www.deepseek.com/harness/" target="_blank" rel="noopener" style="color:var(--blue-light)">deepseek.com/harness ↗</a>'
+      },
+      footer: {
+        tagline: '让没有技术背景的人，30 秒装好并用上 DeepSeek Harness —— 社区开源 · 免费 · 离线可用。',
+        colProject: '项目', colRes: '相关资源',
+        githubRepo: 'GitHub 仓库 ↗', releases: '全部版本（Releases）↗', userGuide: '用户指南 ↗', feedback: '问题反馈 ↗',
+        lanDesc: '扫码局域网', tgDesc: 'TG 遥控', upstream: 'deepseek-harness 上游 ↗', official: 'DeepSeek 官方 Harness ↗',
+        disclaimer: '<b>版权与免责声明：</b>DeepSeek Harness Desktop 为社区开源项目（MIT License），由第三方开发者维护，<b>并非 DeepSeek 官方产品</b>，与 DeepSeek（深度求索）无隶属、赞助或背书关系。「DeepSeek」「DeepSeek Harness」及相关标识的名称与商标归其权利方所有，本项目与页面仅以兼容性说明为目的使用，不构成任何官方授权或保证。项目基于 MIT 许可的上游开源项目 <a href="https://github.com/deepseek-ai/deepseek-harness" target="_blank" rel="noopener" style="color:var(--blue-light)">deepseek-ai/deepseek-harness</a> 构建，上游代码版权与许可归其原作者所有。使用前请阅读并遵守上游项目许可条款。',
+        fine: '页面托管：OSS/COS 公共读（国内加速）· 安装包：国内镜像 + GitHub Releases'
+      },
+      copy: { copy: '复制', copied: '已复制 ✓' }
+    },
+    en: {
+      doc: {
+        title: 'DeepSeek Harness Desktop · Community Download — One-click local AI workspace',
+        metaDesc: 'DeepSeek Harness Desktop community edition (unofficial): a one-click desktop client for non-technical users. No Node.js required, ready in 30 seconds. Supports Windows and macOS (Apple Silicon / Intel).',
+        ogTitle: 'DeepSeek Harness Desktop · Community Download',
+        ogDesc: 'Community open-source project (unofficial): a one-click local AI workspace — no Node.js, QR remote control, works out of the box.'
+      },
+      brand: { community: 'Community' },
+      nav: { download: 'Download', features: 'Features', faq: 'Install Guide', githubRepo: 'GitHub Repo ↗', menuOpen: 'Open menu', menuClose: 'Close menu' },
+      hero: {
+        title: 'A one-click<br>local AI workspace',
+        lede: 'A DeepSeek Harness desktop client for <b>non-technical users</b> — <b>no Node.js, no command line</b>. Installed and running in 30 seconds.',
+        note: 'Community open-source project · Unofficial build, not affiliated with DeepSeek',
+        ctaDownload: 'Download now', ctaGithub: 'View on GitHub',
+        metaOs: 'Windows 10+ / macOS', metaRuntime: 'Bundled DSH runtime · works offline', screenshot: 'Full screenshot ↗'
+      },
+      dl: {
+        title: 'Download now',
+        sub: 'Your system was auto-detected and the recommended package highlighted — pick manually if the detection is wrong.',
+        yourOs: '✓ Your system',
+        winBtn: 'Download installer (.exe)', ghRoute: 'GitHub route ↗',
+        winTip: 'Install tip: if SmartScreen shows "<b>Unknown publisher</b>", click "<b>More info → Run anyway</b>" (unsigned open-source package).',
+        macSub: 'Choose the build for your chip',
+        dmgBtn: 'Download .dmg', zipAlt: '.zip alternative',
+        chipHelp: 'Not sure which chip? Click the <kbd></kbd> menu → "<kbd>About This Mac</kbd>" → check "<kbd>Chip</kbd>".',
+        macTip: 'Install tip: on the first open, when it says "<b>cannot verify the developer</b>", just click "<b>Open</b>" (once only; v0.2.4+ is ad-hoc signed).',
+        linuxSub: 'Installer coming soon', linuxBtn: 'No installer yet', linuxTry: 'Try it from the command line first:',
+        linuxTip: 'Requires Node.js LTS (this path only); the desktop installer will be announced here first.',
+        mirrorOff: 'Currently serving <b>GitHub Releases directly</b> — configure a China mirror per the deployment guide to switch the primary buttons to the accelerated route.',
+        mirrorOn: 'Primary buttons use the <b>China accelerated route</b> · the GitHub route stays as overseas/backup.',
+        aaRecommended: 'v{v} · recommended (newer Macs)',
+        intelNote: 'Latest Intel build is v{v} (Intel builds paused since v0.2.3; this updates automatically when they resume)',
+        freshNote: 'Latest version <b>v{v}</b> detected — if the China route fails, use the "GitHub route" below the button (new packages may not be mirrored yet).',
+        banner: {
+          windows: 'Detected: <b>Windows</b> — the recommended package is highlighted for you',
+          macos: 'Detected: <b>macOS</b> — pick by chip (Apple Silicon by default)',
+          'mac-arm64': 'Detected: <b>macOS · Apple Silicon</b> — the M-chip build is highlighted',
+          'mac-x64': 'Detected: <b>macOS · Intel</b> — the Intel build is highlighted',
+          linux: 'Detected: <b>Linux</b> — no installer yet; try npx for a quick taste',
+          ios: 'Detected a <b>phone/iPad</b> — this is desktop software; visit this page on a computer to download',
+          android: 'Detected a <b>phone</b> — this is desktop software; visit this page on a computer to download',
+          none: 'Could not detect your system — please pick your platform below'
+        }
+      },
+      feat: {
+        title: 'Why the desktop edition',
+        sub: 'Skip "install Node.js, open a terminal, type commands" entirely; plus two built-in <b>phone-remote plugins</b> — QR at home, Telegram on the go, your AI workspace always online.',
+        badge: 'Built-in plugin · highlight',
+        hero1Title: 'LAN QR · control your PC from your phone',
+        hero1Text: 'At home or the office: connect your phone to the same Wi-Fi, scan the QR under "LAN" in the workspace sidebar, and let AI work while you relax. Off by default, one click to enable, with built-in security notes.',
+        hero2Title: 'Telegram remote · keep working on the go',
+        hero2Text: 'Away from home? Chat with a bot in your own Telegram to command your computer anytime; shares the same session as the browser workspace with real-time sync.',
+        src: 'Plugin source ↗',
+        f1Title: 'One-click install', f1Text: 'Double-click the NSIS installer: desktop/Start-menu shortcuts and an uninstaller included; auto-launches after install, in the workspace within 30 seconds.',
+        f2Title: 'No Node.js needed', f2Text: 'The app bundles Electron (with a Node 24 runtime); the DSH service runs as a child process — nothing to install on your computer.',
+        f3Title: 'Self-contained data', f3Text: 'Sessions, config and storage live in the app data directory — uninstalling never deletes them; port conflicts auto-roll and crashed services auto-restart.',
+        f4Title: 'Auto update', f4Text: '"Settings → Check for updates" downloads and installs new versions in one click (GitHub Releases as the source), on both Windows and macOS.'
+      },
+      faq: {
+        title: 'Install Guide', sub: 'Quick answers to common questions — click to expand.',
+        q1: 'macOS says "cannot verify the developer"?',
+        a1: 'Builds since v0.2.4 are <b>ad-hoc signed</b>: on the first open, when it says "cannot verify the developer", just click "<b>Open</b>" (or right-click the app → Open). Once only, no terminal needed.<br>If an old version (v0.2.3 or earlier) says "damaged, cannot be opened", install v0.2.4 or newer; or temporarily run in a terminal: <span class="cmdline">codesign --force --sign - "/Applications/DeepSeek Harness Desktop.app"</span>',
+        q2: 'Windows says "Windows protected your PC"?',
+        a2: 'The installer has no commercial code signing, so SmartScreen shows "Unknown publisher": click "<b>More info</b>" → "<b>Run anyway</b>" to install normally. Always get it from this page or the Releases of <code>yansenlei/dsh-desktop</code> on GitHub.',
+        q3: 'Does uninstalling delete my data?',
+        a3: 'No. Sessions, config and storage live in the app data directory (Windows: <code>%APPDATA%\\DeepSeek Harness Desktop</code>; macOS: <code>~/Library/Application Support/DeepSeek Harness Desktop</code>). Uninstalling never deletes them — reinstalling restores everything.',
+        q4: 'What if the default port is taken?',
+        a4: 'Nothing to do. The service uses port <code>3080</code> by default and <b>rolls automatically</b> to the next free port, then starts normally.',
+        q5: 'How do I update to a new version?',
+        a5: 'In-app "<b>Settings → Check for updates</b>": once a new version is found, click "Download & install". Windows (silent install) and macOS (auto-replace the .app and restart) both need no manual steps.',
+        q6: 'What is the relationship between this community edition and the official one?',
+        a6: 'This desktop client is a <b>community open-source project</b> (MIT) maintained by third-party developers. It is <b>not an official DeepSeek product</b> and has no affiliation, sponsorship or endorsement from DeepSeek. It is built on the MIT-licensed upstream project <code>deepseek-ai/deepseek-harness</code>; the bundled Harness runtime and its license belong to the upstream project. "DeepSeek", "DeepSeek Harness" and related names and trademarks belong to their respective owners and are used here only for compatibility notes. For the official version and support, visit: <a href="https://www.deepseek.com/harness/" target="_blank" rel="noopener" style="color:var(--blue-light)">deepseek.com/harness ↗</a>'
+      },
+      footer: {
+        tagline: 'Let non-technical people install and use DeepSeek Harness in 30 seconds — community, open source, free, offline.',
+        colProject: 'Project', colRes: 'Resources',
+        githubRepo: 'GitHub Repo ↗', releases: 'All releases ↗', userGuide: 'User Guide ↗', feedback: 'Report an issue ↗',
+        lanDesc: 'LAN QR', tgDesc: 'TG remote', upstream: 'deepseek-harness upstream ↗', official: 'Official DeepSeek Harness ↗',
+        disclaimer: '<b>Copyright & disclaimer:</b> DeepSeek Harness Desktop is a community open-source project (MIT License) maintained by third-party developers. It is <b>not an official DeepSeek product</b> and has no affiliation, sponsorship or endorsement from DeepSeek. The names and trademarks of "DeepSeek", "DeepSeek Harness" and related marks belong to their respective owners and are used here solely for compatibility notes, without any official authorization or warranty. The project is built on the MIT-licensed upstream project <a href="https://github.com/deepseek-ai/deepseek-harness" target="_blank" rel="noopener" style="color:var(--blue-light)">deepseek-ai/deepseek-harness</a>; upstream code copyright and licensing belong to its original authors. Please read and comply with the upstream license terms before use.',
+        fine: 'Site hosting: OSS/COS public read (China acceleration) · Packages: China mirror + GitHub Releases'
+      },
+      copy: { copy: 'Copy', copied: 'Copied ✓' }
+    }
+  };
+  var curLang = (function () {
+    try { var s = localStorage.getItem('dshd-lang'); if (s === 'zh' || s === 'en') return s; } catch (e) {}
+    var nav = navigator.language || navigator.userLanguage || '';
+    return String(nav).toLowerCase().indexOf('zh') === 0 ? 'zh' : 'en';
+  })();
+  var lastCfg = null;
+  var lastBannerKey = null;
+  var freshInfo = null;
+
   function setLink(id, ver, file) {           /* 主按钮：镜像优先 */
     var el = $(id);
     if (!el) return;
@@ -691,13 +883,15 @@ footer .fine a:hover{color:var(--muted)}
 
   /* 填入版本 / 大小 / 链接（初始化用内置 CFG，之后可被 latest.json 覆盖） */
   function renderConfig(cfg) {
+    lastCfg = cfg;
+    var d = I18N[curLang];
     $('#ver-pill').textContent = 'v' + cfg.latest;
     $('#win-ver').textContent = 'v' + cfg.windows.ver;
     $('#win-size').textContent = cfg.windows.size + ' · ' + cfg.windows.exe;
     setLink('#win-primary', cfg.windows.ver, cfg.windows.exe);
     setGh('#win-alt', cfg.windows.ver, cfg.windows.exe);
 
-    $('#aa-meta').textContent = 'v' + cfg.macApple.ver + ' · 推荐（新款 Mac）';
+    $('#aa-meta').textContent = tpl(d.dl.aaRecommended, { v: cfg.macApple.ver });
     $('#aa-ver').textContent = 'v' + cfg.macApple.ver;
     $('#aa-size').textContent = cfg.macApple.dmgSize;
     setLink('#mac-aa-primary', cfg.macApple.ver, cfg.macApple.dmg);
@@ -707,7 +901,7 @@ footer .fine a:hover{color:var(--muted)}
     $('#ai-meta').textContent = 'v' + cfg.macIntel.ver;
     $('#ai-ver').textContent = 'v' + cfg.macIntel.ver;
     $('#ai-size').textContent = cfg.macIntel.dmgSize;
-    $('#ai-note').textContent = cfg.macIntel.note;
+    $('#ai-note').textContent = tpl(d.dl.intelNote, { v: cfg.macIntel.ver });
     setLink('#mac-ai-primary', cfg.macIntel.ver, cfg.macIntel.dmg);
     setLink('#mac-ai-zip', cfg.macIntel.ver, cfg.macIntel.zip);
     setGh('#mac-ai-alt', cfg.macIntel.ver, cfg.macIntel.dmg);
@@ -745,9 +939,10 @@ footer .fine a:hover{color:var(--muted)}
         var note = document.getElementById('freshNote');
         if (note) {
           var isNew = String(best.latest) !== String(CFG.latest);
+          freshInfo = isNew ? String(best.latest) : null;
           note.hidden = !isNew;
           if (isNew) {
-            note.innerHTML = '已检测到最新版本 <b>v' + best.latest + '</b> —— 若国内线路下载失败，请使用按钮下方的「GitHub 线路」（新包可能尚未上传国内镜像）。';
+            note.innerHTML = tpl(I18N[curLang].dl.freshNote, { v: best.latest });
           }
         }
       }
@@ -811,14 +1006,15 @@ footer .fine a:hover{color:var(--muted)}
   }
 
   var os = detectOS();
-  var bannerText = {
-    windows: '已识别：<b>Windows</b> —— 已为您高亮推荐安装包',
-    macos: '已识别：<b>macOS</b> —— 请根据芯片选择（默认 Apple Silicon）',
-    linux: '已识别：<b>Linux</b> —— 安装包尚未发布，可先用 npx 快速体验',
-    ios: '检测到 <b>手机/iPad</b> —— 这是桌面软件，请用电脑访问本页下载',
-    android: '检测到 <b>手机</b> —— 这是桌面软件，请用电脑访问本页下载'
-  };
-  banner(bannerText[os] || '未能识别系统 —— 请手动选择下方平台', os ? 'DETECTED · ' + os.toUpperCase() : 'MANUAL');
+  var lastBannerKey = os || 'none';
+  var bannerBadgeMap = { 'mac-arm64': 'DETECTED · ARM64', 'mac-x64': 'DETECTED · X64' };
+  function renderBanner() {
+    var key = lastBannerKey || 'none';
+    var html = I18N[curLang].dl.banner[key] || I18N[curLang].dl.banner.none;
+    var badge = key === 'none' ? 'MANUAL' : (bannerBadgeMap[key] || 'DETECTED · ' + key.toUpperCase());
+    banner(html, badge);
+  }
+  renderBanner();
 
   if (os === 'windows') markCard('windows');
   else if (os === 'macos') {
@@ -830,10 +1026,12 @@ footer .fine a:hover{color:var(--muted)}
         var a = (h && h.architecture) || '';
         if (a === 'arm' || a === 'arm64') {
           markArch('arm64');
-          banner('已识别：<b>macOS · Apple Silicon</b> —— 已为您高亮 M 芯片版本', 'DETECTED · ARM64');
+          lastBannerKey = 'mac-arm64';
+          renderBanner();
         } else if (a.indexOf('x86') === 0) {
           markArch('x64');
-          banner('已识别：<b>macOS · Intel</b> —— 已为您高亮 Intel 版本', 'DETECTED · X64');
+          lastBannerKey = 'mac-x64';
+          renderBanner();
         }
       }).catch(function () {});
     }
@@ -1017,7 +1215,7 @@ footer .fine a:hover{color:var(--muted)}
       navPanel.classList.toggle('open', open);
       navToggle.classList.toggle('open', open);
       navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      navToggle.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+      navToggle.setAttribute('aria-label', open ? I18N[curLang].nav.menuClose : I18N[curLang].nav.menuOpen);
     }
     navToggle.addEventListener('click', function () {
       setMenu(!navPanel.classList.contains('open'));
@@ -1044,9 +1242,9 @@ footer .fine a:hover{color:var(--muted)}
 
   function copyText(txt, btn) {
     var done = function () {
-      btn.textContent = '已复制 ✓';
+      btn.textContent = I18N[curLang].copy.copied;
       btn.classList.add('ok');
-      setTimeout(function () { btn.textContent = '复制'; btn.classList.remove('ok'); }, 1600);
+      setTimeout(function () { btn.textContent = I18N[curLang].copy.copy; btn.classList.remove('ok'); }, 1600);
     };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(txt).then(done, function () { fallbackCopy(); });
@@ -1078,6 +1276,50 @@ footer .fine a:hover{color:var(--muted)}
   });
 
   $('#year').textContent = new Date().getFullYear();
+
+  /* =====================================================
+     ⑥ 语言切换：应用当前语言 + 绑定切换按钮
+     ===================================================== */
+  function applyLang(lang) {
+    curLang = lang || curLang;
+    var d = I18N[curLang] || I18N.zh;
+    document.documentElement.lang = curLang === 'zh' ? 'zh-CN' : 'en';
+    document.title = d.doc.title;
+    var md = document.getElementById('meta-desc'); if (md) md.setAttribute('content', d.doc.metaDesc);
+    var ot = document.getElementById('og-title'); if (ot) ot.setAttribute('content', d.doc.ogTitle);
+    var od = document.getElementById('og-desc'); if (od) od.setAttribute('content', d.doc.ogDesc);
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      var k = el.getAttribute('data-i18n');
+      var v = dictGet(d, k);
+      if (v != null) el.textContent = v;
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(function (el) {
+      var k = el.getAttribute('data-i18n-html');
+      var v = dictGet(d, k);
+      if (v != null) el.innerHTML = v;
+    });
+    if (lastCfg) renderConfig(lastCfg);
+    renderBanner();
+    var note = document.getElementById('freshNote');
+    if (note && freshInfo) {
+      note.hidden = false;
+      note.innerHTML = tpl(d.dl.freshNote, { v: freshInfo });
+    }
+    var langBtn = document.getElementById('langBtn');
+    if (langBtn) langBtn.textContent = curLang === 'zh' ? 'EN' : '中文';
+    if (navToggle) navToggle.setAttribute('aria-label', navPanel && navPanel.classList.contains('open') ? d.nav.menuClose : d.nav.menuOpen);
+    var copyBtn = document.getElementById('copy-npx');
+    if (copyBtn && !copyBtn.classList.contains('ok')) copyBtn.textContent = d.copy.copy;
+  }
+  var langBtnEl = document.getElementById('langBtn');
+  if (langBtnEl) {
+    langBtnEl.addEventListener('click', function () {
+      var next = curLang === 'zh' ? 'en' : 'zh';
+      applyLang(next);
+      try { localStorage.setItem('dshd-lang', next); } catch (e) {}
+    });
+  }
+  applyLang(curLang);
 })();
 </script>
 </body>

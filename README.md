@@ -129,7 +129,8 @@ npm run check:upstream           # 检查 runtime 内置 dsh 是否为 npm 最�
 ## 已知边界（v0.1）
 
 - 未做代码签名：Windows SmartScreen 会提示「未知发布者」，选择「仍要运行」即可。
-- 更新为「检查更新」模式：设置页查询 GitHub Releases 最新版并提示手动下载；未做静默自动升级。
+- 更新为「检查更新 + 静默安装」模式：设置页查询 GitHub Releases 最新版，Windows 上可直接
+  「下载并安装」——流式下载安装包（带进度）→ NSIS `/S` 静默安装 → 应用退出并由安装器拉起新版本。
 - 当前仅 Windows x64 目标；macOS/Linux 的打包配置可在 `package.json` 中扩展。
 
 ## 许可

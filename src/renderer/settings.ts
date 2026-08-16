@@ -39,8 +39,10 @@ const el = {
   aboutDshVersion: $("about-dsh-version"),
   aboutElectron: $("about-electron"),
   aboutNode: $("about-node"),
-  btnCheckUpdate: $("btn-check-update"),
+  btnCheckUpdate: $<HTMLButtonElement>("btn-check-update"),
+  btnUpdateInstall: $<HTMLButtonElement>("btn-update-install"),
   updateResult: $("update-result"),
+  updateProgress: $("update-progress"),
   toast: $("toast"),
 };
 
@@ -156,11 +158,57 @@ async function main() {
     const r = await window.dshDesktop.checkUpdate();
     if (r.latest && !r.upToDate) {
       el.updateResult.textContent = t("settings.updateAvailable").replace("{v}", r.latest);
-      window.dshDesktop.openExternal("https://github.com/yansenlei/dsh-desktop/releases");
+      // 有可用更新：Windows 上提供「下载并安装」，macOS/其它直接打开下载页
+      if (info.platform === "win32") {
+        el.btnUpdateInstall.hidden = false;
+      } else {
+        window.dshDesktop.openExternal("https://github.com/yansenlei/dsh-desktop/releases");
+      }
     } else if (r.upToDate) {
       el.updateResult.textContent = t("settings.upToDate");
+      el.btnUpdateInstall.hidden = true;
     } else {
       el.updateResult.textContent = t("settings.updatePlaceholder");
+      el.btnUpdateInstall.hidden = true;
+    }
+  });
+
+  // ── 静默自动更新：下载 → 安装 → 退出（Windows） ──
+  let downloadedPath: string | undefined;
+  el.btnUpdateInstall.addEventListener("click", async () => {
+    el.btnUpdateInstall.disabled = true;
+    el.btnCheckUpdate.disabled = true;
+    el.updateProgress.hidden = false;
+    if (!downloadedPath) {
+      el.updateProgress.textContent = t("settings.updateDownloading");
+      const d = await window.dshDesktop.downloadUpdate();
+      if (d.error || d.stage === "error") {
+        el.updateProgress.textContent = t("settings.updateDownloadFailed") + (d.error ? `: ${d.error}` : "");
+        el.btnUpdateInstall.disabled = false;
+        el.btnCheckUpdate.disabled = false;
+        return;
+      }
+      downloadedPath = d.filePath;
+    }
+    el.updateProgress.textContent = t("settings.updateInstalling");
+    const r = await window.dshDesktop.installUpdate(downloadedPath);
+    if (!r.ok) {
+      el.updateProgress.textContent = t("settings.updateInstallFailed") + (r.error ? `: ${r.error}` : "");
+      el.btnUpdateInstall.disabled = false;
+      el.btnCheckUpdate.disabled = false;
+    }
+    // 安装器接管后应用会退出；此处不重置按钮
+  });
+
+  window.dshDesktop.onUpdateProgress((p) => {
+    if (p.stage === "downloading" && p.percent !== null) {
+      el.updateProgress.textContent = t("settings.updateDownloading") + ` ${p.percent}%`;
+    } else if (p.stage === "installing") {
+      el.updateProgress.textContent = t("settings.updateInstalling");
+    } else if (p.stage === "error") {
+      el.updateProgress.textContent = t("settings.updateDownloadFailed") + (p.error ? `: ${p.error}` : "");
+    } else if (p.stage === "downloaded") {
+      el.updateProgress.textContent = t("settings.updateReady");
     }
   });
 
@@ -207,6 +255,7 @@ function applyLabels() {
   el.btnOpenData.textContent = t("settings.open");
   el.btnOpenLogs.textContent = t("settings.open");
   el.btnCheckUpdate.textContent = t("settings.checkUpdate");
+  el.btnUpdateInstall.textContent = t("settings.downloadAndInstall");
   el.selLanguage.options[0].textContent = t("settings.langAuto");
 }
 

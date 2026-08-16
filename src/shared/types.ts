@@ -67,6 +67,25 @@ export interface AppInfo {
   dshHome: string;
 }
 
+/** 检查更新结果。 */
+export interface UpdateCheckResult {
+  current: string;
+  latest: string | null;
+  upToDate: boolean;
+  feedConfigured: boolean;
+}
+
+/** 下载更新进度。 */
+export interface UpdateProgress {
+  /** 阶段：checking / downloading / downloaded / installing / done / error */
+  stage: string;
+  /** 0-100（尽力估算）。 */
+  percent: number | null;
+  /** 下载到的安装包本地路径（downloaded 后可用）。 */
+  filePath?: string;
+  error?: string;
+}
+
 export interface DesktopSettings {
   /** 首选端口；被占用时自动顺延。 */
   port: number;
@@ -113,6 +132,9 @@ export const IPC = {
   openExternal: "shell:open-external",
   logsOpen: "logs:open",
   updateCheck: "update:check",
+  updateDownload: "update:download",
+  updateInstall: "update:install",
+  updateProgress: "update:progress",
   windowMinimize: "window:minimize",
   windowClose: "window:close",
   windowSetCloseToTray: "window:set-close-to-tray",

@@ -55,6 +55,15 @@ const api = {
   // 更新
   checkUpdate: (): Promise<{ current: string; latest: string | null; upToDate: boolean; feedConfigured: boolean }> =>
     ipcRenderer.invoke(IPC.updateCheck),
+  downloadUpdate: (): Promise<{ stage: string; percent: number | null; filePath?: string; error?: string }> =>
+    ipcRenderer.invoke(IPC.updateDownload),
+  installUpdate: (filePath?: string): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke(IPC.updateInstall, filePath),
+  onUpdateProgress: (fn: (p: { stage: string; percent: number | null; filePath?: string; error?: string }) => void) => {
+    const listener = (_e: unknown, p: { stage: string; percent: number | null; filePath?: string; error?: string }) => fn(p);
+    ipcRenderer.on(IPC.updateProgress, listener);
+    return () => ipcRenderer.removeListener(IPC.updateProgress, listener);
+  },
 
   // 窗口控制
   minimizeWindow: (): Promise<void> => ipcRenderer.invoke(IPC.windowMinimize),

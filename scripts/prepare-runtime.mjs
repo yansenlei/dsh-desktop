@@ -21,9 +21,10 @@ if (!existsSync(join(bundleDir, "node_modules", "@deepseek-ai", "dsh", "package.
   console.log("安装 DSH 运行时依赖到 runtime/dsh/ …");
   // 用 npm ci：严格按已入库的 package-lock.json 安装，保证 CI 与本地
   // 依赖树完全一致（js-yaml 等 hoist 位置不漂移）。
-  // 注意：不传 --ignore-scripts——sharp 等原生模块依赖 postinstall
-  // 下载对应平台的二进制（macOS 无它则 make-icon 崩溃）。
-  const args = ["ci", "--no-audit", "--no-fund", "--omit=dev"];
+  // --ignore-scripts 必须保留：koffi 等包在 mac arm64 上源码编译会失败
+  // （prebuilt 缺失时触发编译，linker 缺符号）。sharp 的平台二进制随后
+  // 用单独命令补装（见下）。
+  const args = ["ci", "--no-audit", "--no-fund", "--omit=dev", "--ignore-scripts"];
   if (existsSync(cacheDir)) args.push("--cache", cacheDir);
   // Windows 上 npm 是 .cmd 包装：execFileSync 直接执行会 ENOENT/EINVAL，
   // 必须走 shell（spawnSync + shell:true）才能在 Windows CI runner 上工作。
@@ -36,6 +37,17 @@ if (!existsSync(join(bundleDir, "node_modules", "@deepseek-ai", "dsh", "package.
   });
   if (r.status !== 0) {
     throw new Error(`npm ci 失败 (code=${r.status})`);
+  }
+  // 补装 sharp 当前平台的预编译二进制（ignore-scripts 跳过了它；
+  // 不补则 make-icon 在 mac 上报 "Could not load the sharp module"）。
+  const sharpRebuild = spawnSync(npmCmd, ["rebuild", "sharp", "--ignore-scripts=false"], {
+    cwd: bundleDir,
+    stdio: "inherit",
+    shell: process.platform === "win32",
+    env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
+  });
+  if (sharpRebuild.status !== 0) {
+    console.warn("⚠ sharp rebuild 未完成（make-icon 可能不可用），继续");
   }
 } else {
   console.log("DSH 运行时已存在，跳过安装");

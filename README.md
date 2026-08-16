@@ -8,7 +8,7 @@
 **仓库**：[github.com/yansenlei/dsh-desktop](https://github.com/yansenlei/dsh-desktop)
 **下载**：安装包发布在 **GitHub Releases**（应用内「设置 → 检查更新」以 Releases 为更新源）。
 
-## 两个插件，两种"用手机操作电脑"的方式
+## 默认内置插件，两种"用手机操作电脑"的方式
 
 - 📱 **扫码局域网（lan-access）**：**在家里**，手机连上同一 Wi-Fi，扫一下二维码就能操作你的电脑。
 - 📱 **扫码 Telegram（telegram-bridge）**：**没在家的时候**，在自己的 Telegram 里跟机器人对话，随时操作你的电脑。

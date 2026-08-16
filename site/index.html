@@ -5,11 +5,57 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title id="page-title">DeepSeek Harness Desktop · 社区版下载 —— 一键安装的本地 AI 工作台</title>
 <meta name="description" id="meta-desc" content="DeepSeek Harness Desktop 社区版（非官方）：面向非技术用户的一键安装桌面客户端，免装 Node.js，30 秒开箱即用。支持 Windows 与 macOS（Apple Silicon / Intel）。">
+<meta name="keywords" content="DeepSeek,DeepSeek Harness,DeepSeek 桌面版,DeepSeek 本地部署,AI 工作台,AI Agent,一键安装,Electron,Windows,macOS,免费,开源,deepseek desktop,local llm,ai workspace">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="canonical" href="https://yansenlei.github.io/dsh-desktop/">
+<link rel="alternate" hreflang="zh-CN" href="https://yansenlei.github.io/dsh-desktop/?lang=zh-CN">
+<link rel="alternate" hreflang="en" href="https://yansenlei.github.io/dsh-desktop/?lang=en">
+<link rel="alternate" hreflang="x-default" href="https://yansenlei.github.io/dsh-desktop/">
 <meta property="og:title" id="og-title" content="DeepSeek Harness Desktop · 社区版下载">
 <meta property="og:description" id="og-desc" content="社区开源项目（非官方）：一键安装的本地 AI 工作台 —— 免装 Node.js，扫码操控，开箱即用。">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://yansenlei.github.io/dsh-desktop/">
 <meta property="og:image" content="https://yansenlei.github.io/dsh-desktop/deepseek-harness.png">
+<meta property="og:site_name" content="DeepSeek Harness Desktop（社区版）">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="DeepSeek Harness Desktop · 社区版下载">
+<meta name="twitter:description" content="一键安装的本地 AI 工作台（社区开源 · 非官方）—— 免装 Node.js，30 秒开箱即用，Windows / macOS。">
+<meta name="twitter:image" content="https://yansenlei.github.io/dsh-desktop/deepseek-harness.png">
 <link rel="icon" href="icon.png" type="image/png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "DeepSeek Harness Desktop",
+  "alternateName": "DeepSeek Harness 桌面版（社区版）",
+  "description": "面向非技术用户的一键安装桌面客户端：内置 DeepSeek Harness 运行时与 Electron，免装 Node.js，Windows / macOS 开箱即用。",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Windows 10+, macOS",
+  "url": "https://yansenlei.github.io/dsh-desktop/",
+  "downloadUrl": "https://github.com/yansenlei/dsh-desktop/releases/latest",
+  "image": "https://yansenlei.github.io/dsh-desktop/deepseek-harness.png",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" },
+  "license": "https://opensource.org/licenses/MIT",
+  "publisher": { "@type": "Organization", "name": "DeepSeek Harness Desktop Community" },
+  "isAccessibleForFree": true
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "DeepSeek Harness Desktop（社区版）",
+  "url": "https://yansenlei.github.io/dsh-desktop/",
+  "inLanguage": ["zh-CN", "en"],
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://github.com/yansenlei/dsh-desktop/issues?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
 <style>
 /* ============================================================
    DeepSeek Harness Desktop · 社区版下载页
@@ -860,7 +906,16 @@ footer .fine a:hover{color:var(--muted)}
     }
   };
   var curLang = (function () {
-    try { var s = localStorage.getItem('dshd-lang'); if (s === 'zh' || s === 'en') return s; } catch (e) {}
+    try {
+      /* URL 参数优先（配合 hreflang 的 ?lang=zh-CN / ?lang=en），但不持久化 */
+      var m = location.search.match(/[?&]lang=([a-zA-Z-]+)/);
+      if (m) {
+        var v = String(m[1]).toLowerCase();
+        if (v.indexOf('zh') === 0) return 'zh';
+        if (v.indexOf('en') === 0) return 'en';
+      }
+      var s = localStorage.getItem('dshd-lang'); if (s === 'zh' || s === 'en') return s;
+    } catch (e) {}
     var nav = navigator.language || navigator.userLanguage || '';
     return String(nav).toLowerCase().indexOf('zh') === 0 ? 'zh' : 'en';
   })();

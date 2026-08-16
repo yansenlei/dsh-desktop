@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://yansenlei.github.io/dsh-desktop/sitemap.xml

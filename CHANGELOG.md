@@ -9,6 +9,13 @@
 - 代码签名（消除 SmartScreen「未知发布者」与 macOS Gatekeeper 拦截，需代码签名证书 / Apple 开发者证书 + 公证）
 - 更新体验优化（可选：迁移 electron-updater 实现差分更新 / sha512 校验 / 失败回滚）
 
+## [0.2.3] - 2026-08-16
+
+界面修复：
+
+- **修复**：侧边栏插件按钮并排时文字换行——按钮加 `white-space:nowrap` + 超宽省略号
+- **优化**：按钮文案调整——lan-access「手机访问」→「局域网」，telegram-bridge「Telegram 接入」→「Telegram」，并排更对称
+
 ## [0.2.2] - 2026-08-16
 
 功能更新：

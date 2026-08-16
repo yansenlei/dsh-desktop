@@ -158,8 +158,8 @@ async function main() {
     const r = await window.dshDesktop.checkUpdate();
     if (r.latest && !r.upToDate) {
       el.updateResult.textContent = t("settings.updateAvailable").replace("{v}", r.latest);
-      // 有可用更新：Windows 上提供「下载并安装」，macOS/其它直接打开下载页
-      if (info.platform === "win32") {
+      // 有可用更新：Windows/macOS 均提供「下载并安装」，其它平台打开下载页
+      if (info.platform === "win32" || info.platform === "darwin") {
         el.btnUpdateInstall.hidden = false;
       } else {
         window.dshDesktop.openExternal("https://github.com/yansenlei/dsh-desktop/releases");

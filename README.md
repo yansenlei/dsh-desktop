@@ -131,9 +131,12 @@ npm run check:upstream           # 检查 runtime 内置 dsh 是否为 npm 最�
 - **未做代码签名**：
   - Windows：SmartScreen 会提示「未知发布者」，选择「仍要运行」即可。
   - macOS：应用未签名/未公证，Gatekeeper 会拦截——需在「系统设置 → 隐私与安全性」中点击「仍要打开」，或右键应用选「打开」；正式分发建议配置 Apple 开发者证书 + 公证（见 `docs/BUILD_MAC.md`）。
-- 更新为「检查更新 + 静默安装」模式：设置页查询 GitHub Releases 最新版，Windows 上可直接
-  「下载并安装」——流式下载安装包（带进度）→ NSIS `/S` 静默安装 → 应用退出并由安装器拉起新版本。
-- **macOS 已发布**（v0.2.0 起，dmg/zip × x64/arm64），但 macOS 端暂无静默自动更新（走手动下载）。
+- 更新为「检查更新 + 自动安装」模式：设置页查询 GitHub Releases 最新版，检测到新版本后可
+  直接「下载并安装」：
+  - **Windows**：流式下载 NSIS 安装包（带进度）→ `/S` 静默安装 → 应用退出并由安装器拉起新版本。
+  - **macOS**：流式下载对应架构的 zip（带进度）→ 应用退出 → 解压替换 `.app`（移除 quarantine
+    属性，未签名场景可继续打开）→ 自动重启。
+- **macOS 已发布**（v0.2.0 起，dmg/zip × x64/arm64），自动更新与 Windows 同步支持。
 - Linux 目标尚未打包（`package.json` 中无 linux 配置，可按需扩展）。
 
 ## 许可

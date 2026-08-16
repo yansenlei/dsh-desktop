@@ -6,8 +6,7 @@
 
 ### 中优先级
 
-- 代码签名（消除 SmartScreen「未知发布者」，需代码签名证书）
-- macOS 自动更新适配（当前「下载并安装」仅 Windows；macOS 走打开下载页）
+- 代码签名（消除 SmartScreen「未知发布者」与 macOS Gatekeeper 拦截，需代码签名证书 / Apple 开发者证书 + 公证）
 
 ## [0.2.0] - 2026-08-16
 

@@ -4,7 +4,7 @@
 import { ipcMain, shell, BrowserWindow, app } from "electron";
 import { spawn } from "node:child_process";
 import { createWriteStream } from "node:fs";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 import { rm, mkdir } from "node:fs/promises";
 import {
   IPC,
@@ -36,7 +36,7 @@ export function broadcastUpdateProgress(p: UpdateProgress) {
 const UPDATE_REPO = "yansenlei/dsh-desktop";
 const UPDATE_API = `https://api.github.com/repos/${UPDATE_REPO}/releases/latest`;
 
-/** 查询最新 release 元信息（版本号 + 安装包 asset 下载 URL）。 */
+/** 查询最新 release 元信息（版本号 + 当前平台安装包 asset）。 */
 async function fetchLatestRelease(): Promise<{ tag: string; assetUrl: string | null; assetName: string | null } | null> {
   const res = await fetch(UPDATE_API, {
     signal: AbortSignal.timeout(8_000),
@@ -45,13 +45,24 @@ async function fetchLatestRelease(): Promise<{ tag: string; assetUrl: string | n
   if (!res.ok) return null;
   const data = await res.json();
   const tag = typeof data.tag_name === "string" ? data.tag_name.replace(/^v/, "") : null;
-  // Windows 安装包 asset（NSIS exe）；macOS 场景在此忽略（更新按钮仅 Windows 启用）。
+  // 按当前平台选择资产：
+  // - win32: NSIS exe（安装器）
+  // - darwin: zip（按架构 x64/arm64；解压后替换 .app，未签名场景更可靠）
   let assetUrl: string | null = null;
   let assetName: string | null = null;
+  const isMac = process.platform === "darwin";
+  const arch = process.arch === "arm64" ? "arm64" : "x64";
   for (const a of data.assets ?? []) {
-    if (typeof a.name === "string" && a.name.endsWith(".exe") && !a.name.endsWith(".blockmap")) {
+    const name = typeof a.name === "string" ? a.name : "";
+    if (isMac) {
+      if (name.endsWith(".zip") && name.includes(arch) && !name.endsWith(".blockmap")) {
+        assetUrl = typeof a.browser_download_url === "string" ? a.browser_download_url : null;
+        assetName = name;
+        break;
+      }
+    } else if (name.endsWith(".exe") && !name.endsWith(".blockmap")) {
       assetUrl = typeof a.browser_download_url === "string" ? a.browser_download_url : null;
-      assetName = a.name;
+      assetName = name;
       break;
     }
   }
@@ -173,13 +184,13 @@ export function registerIpc(deps: IpcDeps) {
     try {
       const rel = await fetchLatestRelease();
       if (!rel || !rel.assetUrl) {
-        const p: UpdateProgress = { stage: "error", percent: null, error: "未找到可下载的安装包（需要 Windows 版本 Release）" };
+        const p: UpdateProgress = { stage: "error", percent: null, error: "未找到可下载的安装包（需要当前平台的 Release 资产）" };
         broadcastUpdateProgress(p);
         return p;
       }
       const destDir = join(app.getPath("temp"), "dsh-desktop-update");
       await mkdir(destDir, { recursive: true });
-      const dest = join(destDir, rel.assetName ?? "dsh-desktop-setup.exe");
+      const dest = join(destDir, rel.assetName ?? (process.platform === "darwin" ? "dsh-desktop-update.zip" : "dsh-desktop-setup.exe"));
       await rm(dest, { force: true });
       info(`开始下载更新: ${rel.tag} → ${dest}`);
       broadcastUpdateProgress({ stage: "downloading", percent: 0 });
@@ -195,18 +206,67 @@ export function registerIpc(deps: IpcDeps) {
     }
   });
 
-  // ── 静默安装更新：运行 NSIS 安装器（/S）后退出应用 ────────────────
+  // ── 安装更新：Windows 用 NSIS 静默安装；macOS 解压 zip 替换 .app ──
   ipcMain.handle(IPC.updateInstall, async (_e, filePath?: string): Promise<{ ok: boolean; error?: string }> => {
-    const installer = filePath || join(app.getPath("temp"), "dsh-desktop-update", "dsh-desktop-setup.exe");
+    const installer = filePath || join(
+      app.getPath("temp"),
+      "dsh-desktop-update",
+      process.platform === "darwin" ? "dsh-desktop-update.zip" : "dsh-desktop-setup.exe",
+    );
     try {
       const { stat } = await import("node:fs/promises");
       await stat(installer);
     } catch {
       return { ok: false, error: `安装包不存在: ${installer}` };
     }
-    info(`开始静默安装: ${installer}`);
+    info(`开始安装更新: ${installer}`);
     broadcastUpdateProgress({ stage: "installing", percent: null });
-    // NSIS 静默安装（/S）；安装完成后应用自退出，由安装器拉起新版本。
+
+    if (process.platform === "darwin") {
+      // macOS：写一个 detached 脚本，等本应用退出后解压 zip 并替换 .app，
+      // 最后重新启动。ditto 保留权限/符号链接；替换前移除 quarantine 属性
+      // （未签名场景下避免 Gatekeeper 二次拦截）。
+      const script = join(app.getPath("temp"), "dsh-desktop-update", "update-mac.sh");
+      const appPath = app.getAppPath(); // 打包后为 .../DeepSeek Harness Desktop.app/Contents/Resources/app.asar
+      const appRoot = join(dirname(dirname(dirname(appPath)))); // .app 根目录
+      const scriptBody = [
+        "#!/bin/sh",
+        'sleep 2 # 等待本应用退出',
+        `ZIP="${installer.replace(/"/g, '\\"')}"`,
+        `APP="${appRoot.replace(/"/g, '\\"')}"`,
+        "TMP=\"$(mktemp -d)\"",
+        'ditto -xk "$ZIP" "$TMP"',
+        'NEWAPP="$(find "$TMP" -maxdepth 2 -name "*.app" -type d | head -1)"',
+        'if [ -z "$NEWAPP" ]; then echo "解压后未找到 .app"; exit 1; fi',
+        'rm -rf "$APP"',
+        'mv "$NEWAPP" "$APP"',
+        'xattr -dr com.apple.quarantine "$APP" 2>/dev/null || true',
+        'rm -rf "$TMP" "$ZIP"',
+        'open "$APP"',
+      ].join("\n");
+      try {
+        const { writeFile } = await import("node:fs/promises");
+        await writeFile(script, scriptBody, { encoding: "utf8", mode: 0o755 });
+      } catch (err) {
+        const msg = `写入更新脚本失败: ${(err as Error).message}`;
+        logError(msg);
+        broadcastUpdateProgress({ stage: "error", percent: null, error: msg });
+        return { ok: false, error: msg };
+      }
+      const child = spawn("/bin/sh", [script], { detached: true, stdio: "ignore" });
+      child.on("error", (err) => {
+        logError(`启动更新脚本失败: ${err.message}`);
+        broadcastUpdateProgress({ stage: "error", percent: null, error: err.message });
+      });
+      child.unref();
+      setTimeout(() => {
+        broadcastUpdateProgress({ stage: "done", percent: 100 });
+        app.quit();
+      }, 500);
+      return { ok: true };
+    }
+
+    // Windows：NSIS 静默安装（/S）；安装完成后应用自退出，由安装器拉起新版本。
     const child = spawn(installer, ["/S"], {
       detached: true,
       stdio: "ignore",

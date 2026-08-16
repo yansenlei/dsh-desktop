@@ -3,7 +3,7 @@
  * 并写入版本标记。
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, writeFileSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, writeFileSync, readFileSync, rmSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -53,7 +53,7 @@ if (existsSync(sharpWasm)) {
 
 // 写入标记
 const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
-const dshPkgPath = join(runtimeDir, "node_modules", "@deepseek-ai", "dsh", "package.json");
+const dshPkgPath = join(bundleDir, "node_modules", "@deepseek-ai", "dsh", "package.json");
 const dshPkg = JSON.parse(readFileSync(dshPkgPath, "utf8"));
 const lock = existsSync(lockPath) ? JSON.parse(readFileSync(lockPath, "utf8")) : null;
 

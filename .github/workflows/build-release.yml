@@ -110,8 +110,12 @@ jobs:
         run: node scripts/build-plugins.mjs
 
       - name: Package dmg/zip (x64)
-        # 只构建本机架构（x64），避免在单一 runner 上产出名不副实的 arm64 包
-        run: npx electron-builder --mac --x64 --publish never
+        # 只构建本机架构（x64），避免在单一 runner 上产出名不副实的 arm64 包。
+        # ulimit：dsh-runtime 数万文件，electron-builder 签名/打包时默认 fd 上限
+        # （macOS runner 为 256）会触发 EMFILE: too many open files。
+        run: |
+          ulimit -n 4096
+          npx electron-builder --mac --x64 --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -159,8 +163,12 @@ jobs:
         run: node scripts/build-plugins.mjs
 
       - name: Package dmg/zip (arm64)
-        # 只构建本机架构（arm64），产出真正的 Apple Silicon 二进制
-        run: npx electron-builder --mac --arm64 --publish never
+        # 只构建本机架构（arm64），产出真正的 Apple Silicon 二进制。
+        # ulimit：dsh-runtime 数万文件，electron-builder 签名/打包时默认 fd 上限
+        # （macOS runner 为 256）会触发 EMFILE: too many open files。
+        run: |
+          ulimit -n 4096
+          npx electron-builder --mac --arm64 --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

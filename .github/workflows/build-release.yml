@@ -18,6 +18,8 @@ jobs:
   build-windows:
     name: Build Windows x64
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -48,7 +50,8 @@ jobs:
         run: node scripts/build-plugins.mjs
 
       - name: Package NSIS installer
-        run: npm run dist
+        # --publish never: 只打包上传 artifact，Release 由下方 release job 统一发布
+        run: npm run dist -- --publish never
         env:
           # 若需镜像 Electron/NSIS 下载可打开：
           # ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
@@ -67,6 +70,8 @@ jobs:
   build-macos:
     name: Build macOS (x64 + arm64)
     runs-on: macos-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -97,7 +102,8 @@ jobs:
         run: node scripts/build-plugins.mjs
 
       - name: Package dmg/zip
-        run: npx electron-builder --mac
+        # --publish never: 只打包上传 artifact，Release 由下方 release job 统一发布
+        run: npx electron-builder --mac --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

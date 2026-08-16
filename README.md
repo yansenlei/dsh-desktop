@@ -14,7 +14,7 @@
 ## 产品特性
 
 - **一键安装**：NSIS 安装包，双击 → 安装 → 自动启动，桌面/开始菜单快捷方式、卸载器齐全。
-- **免装 Node.js**：应用自带 Electron（含 Node 22 运行时），DSH 服务在应用内以子进程运行，用户机器完全不需要安装 Node.js。
+- **免装 Node.js**：应用自带 Electron（含 Node 24 运行时），DSH 服务在应用内以子进程运行，用户机器完全不需要安装 Node.js。
 - **内置 DSH 运行时**：`@deepseek-ai/dsh@0.1.0-rc.6` 与其全部依赖随安装包分发，离线可用。
 - **桌面壳体验**：暗黑科技风品牌启动页（旋转光环 logo + 启动进度 + 运行日志）→ 自动载入 Harness 工作台；系统托盘常驻（状态、打开/重启/设置/退出）。
 - **局域网访问（手机扫码）**：内置 `lan-access` 插件，Harness 侧边栏「手机访问」按钮弹出二维码（内容为局域网访问 URL）；手机连同一 Wi-Fi 扫码即可在局域网内随时连接自己的电脑。桌面端「设置 → 局域网访问」一键开关（默认关闭，开启时服务绑定 0.0.0.0 并自动放行本机局域网 IP，详见下文安全说明）。
@@ -28,7 +28,7 @@
 ## 技术架构
 
 ```
-┌────────────────────── Electron 38（Chromium + Node 22）─────────────────┐
+┌────────────────────── Electron 41（Chromium 146 + Node 24）─────────────┐
 │  main 进程                                                              │
 │  ├─ 窗口/托盘/生命周期    ── 壳 UI（本地 HTML：启动页 / 设置页）        │
 │  ├─ IPC 桥（contextBridge, sandbox 渲染进程）                           │
@@ -41,12 +41,12 @@
 ├─ 内置插件 @dsh-desktop/lan-access（局域网二维码）                       │
 │    ├─ node half：注册 /lan-info（返回局域网 IP/URL/开关状态）           │
 │    └─ client half：侧边栏「手机访问」按钮 + 二维码面板（qrcode 打包）   │
-└─ 子进程：dsh web（Node 22.22 · DSH_HOME=userData/dsh-home · 端口动态）  │
+└─ 子进程：dsh web（Node 24 · DSH_HOME=userData/dsh-home · 端口动态）     │
         └─ http://127.0.0.1:<port>  →  BrowserWindow 加载 Harness UI      │
 ```
 
 - **服务与壳隔离**：Harness 服务是独立子进程，崩溃不影响应用壳，可随时重启。
-- **无外部依赖启动**：Electron 内置 Node 22 满足 DSH rc.6 的要求（zstd / type-stripping）。
+- **无外部依赖启动**：Electron 内置 Node 24 满足 DSH rc.6 的要求（zstd / type-stripping）。
 - **局域网访问机制**：开启后通过 `--patch` 把 webserver 绑定到 `0.0.0.0`；
   DSH 的 `resolveLanTrust` 会自动把本机局域网 IPv4 加入 browser-trust 放行列表，
   手机等局域网设备即可访问。插件通过 `$DSH_HOME/profiles/web/node_modules`

@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
-    "electron": "38.8.6",
+    "electron": "^41.10.5",
     "electron-builder": "^26.0.12",
     "esbuild": "^0.25.0",
     "qrcode": "^1.5.4",

@@ -9,8 +9,8 @@
 - **现状**：`package.json` 锁定 `electron 38.8.6`（38.x 最终版）。官方支持政策下 **Electron 38.x 已结束支持**（EOL，见 https://www.electronjs.org/docs/latest/tutorial/electron-timelines#version-support-policy），不再接收安全修复。
 - **风险**：38.x 系存在已披露 CVE（如 [CVE-2026-34767](https://app.opencve.io/cve/CVE-2026-34767) HTTP 响应头注入、[CVE-2026-34772](https://vuldb.com/zh/vuln/355228) 内存损坏等）。桌面应用直接打开本机/局域网页面，建议尽快升级。
 - **升级路径**（需在有网络的环境执行）：
-  1. `npm install --save-dev electron@41`（或当前维护线 39-43 任一；41 为较稳妥的 LTS 相邻版本）
-  2. 验证 `npm run build` + `npm run smoke` 通过（Electron 内置 Node 随版本提升，dsh rc.6 的 zstd/type-stripping 要求只会更易满足）
+  1. `npm install --save-dev electron@41.10.5`（已确认：Electron 41.10.5 内置 Node 24.18 / Chromium 146；38.8.6 为 Node 22.22 / Chromium 140。Node 24 完整支持 dsh rc.6 所需的 zstd 与 type-stripping，兼容无风险）
+  2. 验证 `npm run build` + `npm run smoke` 通过
   3. 更新 README 中「Electron 38 / Node 22」相关描述
   4. 重新打包并发布（`npm run dist` + 打 tag 触发 CI）
 - **升级后**：把本文档本条目移除。

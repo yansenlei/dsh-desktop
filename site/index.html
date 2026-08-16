@@ -634,22 +634,22 @@ footer .fine a:hover{color:var(--muted)}
      ① 下载配置 —— 发新版时只需改这里（部署指南：DEPLOY_CN.md）
      ===================================================== */
   var CFG = {
-    latest: '0.2.4',          // 当前最新版本号
+    latest: '0.2.6',          // 当前最新版本号（兜底值，会被 latest.json 覆盖）
     // 国内镜像根 URL（阿里云 OSS / 腾讯云 COS）。留空 = 直连 GitHub Releases。
     // 例如: 'https://your-bucket.oss-cn-hangzhou.aliyuncs.com/dsh-desktop'
     mirrorBase: '',
 
     windows: {
-      ver: '0.2.4',
-      exe: 'DeepSeek-Harness-Desktop-Setup-0.2.4.exe',
+      ver: '0.2.6',
+      exe: 'DeepSeek-Harness-Desktop-Setup-0.2.6.exe',
       size: '145 MB'
     },
     macApple: {                // Apple Silicon（M1–M4）
-      ver: '0.2.4',
-      dmg: 'DeepSeek-Harness-Desktop-0.2.4-arm64.dmg',
-      zip: 'DeepSeek-Harness-Desktop-0.2.4-arm64.zip',
-      dmgSize: '154 MB',
-      zipSize: '174 MB'
+      ver: '0.2.6',
+      dmg: 'DeepSeek-Harness-Desktop-0.2.6-arm64.dmg',
+      zip: 'DeepSeek-Harness-Desktop-0.2.6-arm64.zip',
+      dmgSize: '155 MB',
+      zipSize: '175 MB'
     },
     macIntel: {                // Intel（x64）—— 目前最新可用为 v0.2.2
       ver: '0.2.2',
@@ -716,35 +716,62 @@ footer .fine a:hover{color:var(--muted)}
 
   if (mirrorBase) $('#mirrorNote').classList.add('mirror-on');
 
-  /* 自动获取最新版本信息：多源依次尝试，成功则刷新页面数据 */
+  /* 自动获取最新版本信息：全部源并行拉取，取版本号最大的有效结果（防止旧源遮蔽新源） */
   (function fetchLatest() {
     if (typeof fetch !== 'function') return;
     var sources = CFG.versionSources || ['latest.json'];
-    var i = 0;
-    function next() {
-      if (i >= sources.length) return;
-      var url = sources[i++];
+    function cmpVer(a, b) {
+      var pa = String(a).replace(/^v/, '').split('.').map(Number);
+      var pb = String(b).replace(/^v/, '').split('.').map(Number);
+      for (var i = 0; i < Math.max(pa.length, pb.length); i++) {
+        var x = pa[i] || 0, y = pb[i] || 0;
+        if (x !== y) return x - y;
+      }
+      return 0;
+    }
+    var results = [];
+    var pending = sources.length;
+    function done() {
+      if (pending > 0) return;
+      var best = null;
+      for (var i = 0; i < results.length; i++) {
+        var v = results[i];
+        if (v && v.windows && v.macApple && v.macIntel) {
+          if (!best || cmpVer(v.latest, best.latest) > 0) best = v;
+        }
+      }
+      if (best) {
+        renderConfig(best);
+        var note = document.getElementById('freshNote');
+        if (note) {
+          var isNew = String(best.latest) !== String(CFG.latest);
+          note.hidden = !isNew;
+          if (isNew) {
+            note.innerHTML = '已检测到最新版本 <b>v' + best.latest + '</b> —— 若国内线路下载失败，请使用按钮下方的「GitHub 线路」（新包可能尚未上传国内镜像）。';
+          }
+        }
+      }
+    }
+    sources.forEach(function (url) {
+      var settled = false;
       var ctl = ('AbortController' in window) ? new AbortController() : null;
-      var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 4500);
+      function settle() {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        pending--;
+        done();
+      }
+      var timer = setTimeout(function () {
+        if (ctl) ctl.abort();
+        settle();
+      }, 4500);
       fetch(url, { signal: ctl ? ctl.signal : undefined, cache: 'no-store' })
         .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
-        .then(function (v) {
-          clearTimeout(timer);
-          if (v && v.windows && v.macApple && v.macIntel) {
-            renderConfig(v);
-            var note = document.getElementById('freshNote');
-            if (note) {
-              var isNew = String(v.latest) !== String(CFG.latest);
-              note.hidden = !isNew;
-              if (isNew) {
-                note.innerHTML = '已检测到最新版本 <b>v' + v.latest + '</b> —— 若国内线路下载失败，请使用按钮下方的「GitHub 线路」（新包可能尚未上传国内镜像）。';
-              }
-            }
-          }
-        })
-        .catch(function () { clearTimeout(timer); next(); });
-    }
-    next();
+        .then(function (v) { if (!settled) results.push(v); })
+        .catch(function () {})
+        .then(settle);
+    });
   })();
 
   /* =====================================================

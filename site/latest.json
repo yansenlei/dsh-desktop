@@ -1,16 +1,16 @@
 {
-  "latest": "0.2.6",
-  "publishedAt": "2026-08-20",
+  "latest": "0.2.7",
+  "publishedAt": "2026-08-16",
   "windows": {
-    "ver": "0.2.6",
-    "exe": "DeepSeek-Harness-Desktop-Setup-0.2.6.exe",
+    "ver": "0.2.7",
+    "exe": "DeepSeek-Harness-Desktop-Setup-0.2.7.exe",
     "size": "145 MB"
   },
   "macApple": {
-    "ver": "0.2.6",
-    "dmg": "DeepSeek-Harness-Desktop-0.2.6-arm64.dmg",
-    "zip": "DeepSeek-Harness-Desktop-0.2.6-arm64.zip",
-    "dmgSize": "155 MB",
+    "ver": "0.2.7",
+    "dmg": "DeepSeek-Harness-Desktop-0.2.7-arm64.dmg",
+    "zip": "DeepSeek-Harness-Desktop-0.2.7-arm64.zip",
+    "dmgSize": "154 MB",
     "zipSize": "175 MB"
   },
   "macIntel": {

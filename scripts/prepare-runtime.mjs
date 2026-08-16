@@ -21,7 +21,9 @@ if (!existsSync(join(bundleDir, "node_modules", "@deepseek-ai", "dsh", "package.
   console.log("安装 DSH 运行时依赖到 runtime/dsh/ …");
   const args = ["install", "--no-audit", "--no-fund", "--omit=dev", "--ignore-scripts"];
   if (existsSync(cacheDir)) args.push("--cache", cacheDir);
-  execFileSync("npm", args, { cwd: bundleDir, stdio: "inherit", env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined } });
+  // Windows 上 npm 是 .cmd 包装，execFileSync 直接执行会 ENOENT（CI/受限环境同）
+  const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
+  execFileSync(npmCmd, args, { cwd: bundleDir, stdio: "inherit", env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined } });
 } else {
   console.log("DSH 运行时已存在，跳过安装");
 }

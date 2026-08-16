@@ -1,14 +1,15 @@
 # 发版完成（build-release 成功且为 v* tag）后自动更新下载页版本信息。
 #
 # 原理：build-release 发布 Release 后，本 workflow 调用 site/tools/gen-latest-json.mjs
-#       拉取 Releases/latest 生成 site/latest.json → 提交回 main 分支。
-#       下载页加载时自动从 latest.json（同源 / jsDelivr / GitHub raw）获取最新版本并刷新按钮。
-#       页面 HTML 从此无需在每次发版时修改。
+#       拉取 Releases/latest 生成 site/latest.json → 提交回 main 分支，
+#       并直接把 site/ 部署到 GitHub Pages（下载页加载时自动从 latest.json
+#       获取最新版本并刷新按钮，页面 HTML 无需在每次发版时修改）。
 #
 # 注意：
 # - 用 workflow_run 而不是直接监听 tag：直接监听 tag 时 Release 还没发布，
 #   gen 脚本会取到旧版数据；且 tag 上 checkout 是 detached HEAD，git push 必失败。
-# - 提交到 main 会触发 deploy-github-pages（site/** 路径过滤），自动部署下载页。
+# - Pages 部署合并在本 workflow 内：GITHUB_TOKEN 的推送不会触发其它 workflow
+#   （GitHub 防循环机制），分开部署会漏掉更新。
 name: publish-latest-json
 
 on:
@@ -18,12 +19,17 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   publish:
     # 仅在 build-release 为 tag 发版且成功时运行（main 推送的构建不触发）
     if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v') }}
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,7 +45,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node site/tools/gen-latest-json.mjs
 
-      - name: 提交并推送
+      - name: 提交 latest.json 到 main
         run: |
           TAG="${{ github.event.workflow_run.head_branch }}"
           git config user.name  "github-actions[bot]"
@@ -51,3 +57,12 @@ jobs:
           else
             echo "latest.json 无变化，跳过提交"
           fi
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -8,6 +8,7 @@ import { app, BrowserWindow, Tray, Menu, nativeImage, shell } from "electron";
 import { join } from "node:path";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { IPC, ServerStatus, AppInfo, DesktopSettings, DEFAULT_SETTINGS } from "../shared/types";
+import { LINKS } from "../shared/links";
 import { initLogger, info, warn, error as logError } from "./logger";
 import { initSettings, getSettings, setSettings } from "./settings";
 import { DshServerManager } from "./server";
@@ -207,6 +208,11 @@ function main() {
       { type: "separator" },
       { label: t("tray.settings"), click: () => createSettingsWindow() },
       { label: t("tray.restartService"), click: async () => { await server.stop(); await server.start(); } },
+      { type: "separator" },
+      { label: t("tray.helpUserGuide"), click: () => shell.openExternal(LINKS.userGuide) },
+      { label: t("tray.helpFeedback"), click: () => shell.openExternal(LINKS.feedback) },
+      { label: t("tray.helpDshSite"), click: () => shell.openExternal(LINKS.dshSite) },
+      { label: t("tray.helpDshdSite"), click: () => shell.openExternal(LINKS.dshdSite) },
       { type: "separator" },
       { label: t("tray.quit"), click: () => { quitting = true; app.quit(); } },
     ];

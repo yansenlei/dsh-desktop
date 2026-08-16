@@ -3,6 +3,7 @@
  */
 import { setLang, detectLang, t } from "./i18n";
 import type { EnvCheck, InstallProgress } from "../shared/types";
+import { LINKS } from "../shared/links";
 
 declare global {
   interface Window {
@@ -35,6 +36,10 @@ const el = {
   btnOpenData: $("btn-open-data"),
   btnOpenLogs: $("btn-open-logs"),
   dataDirPath: $("data-dir-path"),
+  btnHelpGuide: $<HTMLButtonElement>("btn-help-guide"),
+  btnHelpFeedback: $<HTMLButtonElement>("btn-help-feedback"),
+  btnHelpDsh: $<HTMLButtonElement>("btn-help-dsh"),
+  btnHelpDshd: $<HTMLButtonElement>("btn-help-dshd"),
   aboutVersion: $("about-version"),
   aboutDshVersion: $("about-dsh-version"),
   engineUpdateHint: $("engine-update-hint"),
@@ -150,6 +155,12 @@ async function main() {
   el.btnOpenData.addEventListener("click", () => window.dshDesktop.openPath(info.userDataDir));
   el.btnOpenLogs.addEventListener("click", () => window.dshDesktop.openLogsDir());
 
+  // ── 帮助与反馈 ──
+  el.btnHelpGuide.addEventListener("click", () => window.dshDesktop.openExternal(LINKS.userGuide));
+  el.btnHelpFeedback.addEventListener("click", () => window.dshDesktop.openExternal(LINKS.feedback));
+  el.btnHelpDsh.addEventListener("click", () => window.dshDesktop.openExternal(LINKS.dshSite));
+  el.btnHelpDshd.addEventListener("click", () => window.dshDesktop.openExternal(LINKS.dshdSite));
+
   // ── 关于 ──
   el.aboutVersion.textContent = info.version;
   el.aboutDshVersion.textContent = info.dshVersion ?? "-";
@@ -250,6 +261,15 @@ function applyLabels() {
     "lbl-data-dir": "settings.dataDir",
     "lbl-data-dir-detail": "settings.dataDirDetail",
     "lbl-log-dir": "settings.logDir",
+    "sec-help": "settings.help",
+    "lbl-help-guide": "settings.userGuide",
+    "lbl-help-guide-detail": "settings.userGuideDetail",
+    "lbl-help-feedback": "settings.feedback",
+    "lbl-help-feedback-detail": "settings.feedbackDetail",
+    "lbl-help-dsh": "settings.dshSite",
+    "lbl-help-dsh-detail": "settings.dshSiteDetail",
+    "lbl-help-dshd": "settings.dshdSite",
+    "lbl-help-dshd-detail": "settings.dshdSiteDetail",
     "lbl-version": "version",
     "lbl-dsh-version": "settings.dshVersion",
     "lbl-update": "settings.update",
@@ -262,6 +282,10 @@ function applyLabels() {
   el.btnRestart.textContent = t("settings.restart");
   el.btnOpenData.textContent = t("settings.open");
   el.btnOpenLogs.textContent = t("settings.open");
+  el.btnHelpGuide.textContent = t("settings.open");
+  el.btnHelpFeedback.textContent = t("settings.open");
+  el.btnHelpDsh.textContent = t("settings.open");
+  el.btnHelpDshd.textContent = t("settings.open");
   el.btnCheckUpdate.textContent = t("settings.checkUpdate");
   el.btnUpdateInstall.textContent = t("settings.downloadAndInstall");
   el.selLanguage.options[0].textContent = t("settings.langAuto");

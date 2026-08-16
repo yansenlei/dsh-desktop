@@ -6,8 +6,6 @@
     "type": "module",
     "dependencies": {
         "@deepseek-ai/dsh": "0.1.0-rc.6",
-        "@dsh-desktop/lan-access": "0.1.0",
-        "@dsh-desktop/telegram-bridge": "0.1.0",
         "undici": "^7.29.0"
     }
 }

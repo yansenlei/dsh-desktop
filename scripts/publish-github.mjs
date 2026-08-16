@@ -22,7 +22,7 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OWNER = "yansenlei";
-const VERSION = "0.2.1";
+const VERSION = "0.2.2";
 const PLUGIN_VERSION = "0.1.0"; // 与两个插件 npm 包当前版本保持一致
 
 const token = process.argv[2] || process.env.GITHUB_TOKEN;

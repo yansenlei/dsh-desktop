@@ -79,6 +79,7 @@ npm run build                    # esbuild 打包 main/preload/renderer 到 dist
 npm run smoke                    # 端到端冒烟测试（启动服务→HTTP 探活→退出）
 npm start                        # 本地运行（构建后启动 Electron）
 npm run dist                     # 打包 NSIS 一键安装器（release/ 目录）
+npm run check:upstream           # 检查 runtime 内置 dsh 是否为 npm 最新版（维护用）
 ```
 
 > 构建时若无法访问 GitHub（下载 Electron/NSIS 工具链），可设置镜像：
@@ -90,6 +91,12 @@ npm run dist                     # 打包 NSIS 一键安装器（release/ 目录
 
 `npm run smoke` 以无窗口模式启动应用，验证：DSH 服务启动 → HTTP 200 →
 `window.__DSH_BOOT__` 注入 → 干净退出。结果写入 `smoke-result.json`。
+
+### CI 构建与发布
+
+`.github/workflows/build-release.yml` 提供 GitHub Actions 流水线：
+- push 到 `main`：自动构建 Windows / macOS 安装包并上传 artifact
+- 打 `v*` tag：自动发布 GitHub Release（应用内「检查更新」以此为源）
 
 ## 安装包产物
 

@@ -12,6 +12,7 @@
     "build": "node scripts/build.mjs",
     "build:plugins": "node scripts/build-plugins.mjs",
     "prepare:runtime": "node scripts/prepare-runtime.mjs",
+    "check:upstream": "node scripts/check-upstream.mjs",
     "icon": "node scripts/make-icon.mjs",
     "smoke": "node scripts/smoke.mjs",
     "start": "npm run build && electron .",

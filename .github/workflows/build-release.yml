@@ -1,0 +1,129 @@
+name: build-release
+
+# 构建 + 发布 dsh-desktop 安装包。
+# - push 到 main：构建 win/mac 安装包并上传 artifact（不发布）
+# - 打 tag v*.*.*：额外发布 GitHub Release（附安装包），供应用内「检查更新」使用
+#
+# 注意：macOS 构建在 macos  runner 上；Windows 在 windows runner 上。
+# 插件源码改动需同步到 dsh-plugin-lan-access / dsh-plugin-telegram-bridge 独立仓库，
+# 本工作流只负责主仓库的打包与发布。
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch: # 手动触发
+
+jobs:
+  build-windows:
+    name: Build Windows x64
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # package.json 里的 electronDownload.cache 指向本机开发缓存目录，
+      # CI runner 上不存在；移除后 electron-builder 用默认缓存。
+      - name: Neutralize local electron cache path
+        run: node -e "const fs=require('fs');const p='package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));if(j.build&&j.build.electronDownload){delete j.build.electronDownload.cache;}fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n');"
+
+      - name: Prepare DSH runtime
+        run: npm run prepare:runtime
+
+      - name: Build app (esbuild)
+        run: npm run build
+
+      - name: Build bundled plugins
+        run: node scripts/build-plugins.mjs
+
+      - name: Package NSIS installer
+        run: npm run dist
+        env:
+          # 若需镜像 Electron/NSIS 下载可打开：
+          # ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dsh-desktop-windows-x64
+          path: |
+            release/*.exe
+            release/*.exe.blockmap
+            release/latest.yml
+          if-no-files-found: error
+
+  build-macos:
+    name: Build macOS (x64 + arm64)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # package.json 里的 electronDownload.cache 指向本机开发缓存目录，
+      # CI runner 上不存在；移除后 electron-builder 用默认缓存。
+      - name: Neutralize local electron cache path
+        run: node -e "const fs=require('fs');const p='package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));if(j.build&&j.build.electronDownload){delete j.build.electronDownload.cache;}fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n');"
+
+      - name: Prepare DSH runtime
+        run: npm run prepare:runtime
+
+      - name: Build app (esbuild)
+        run: npm run build
+
+      - name: Build bundled plugins
+        run: node scripts/build-plugins.mjs
+
+      - name: Package dmg/zip
+        run: npx electron-builder --mac
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dsh-desktop-macos
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/latest-mac.yml
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: [build-windows, build-macos]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Publish release (tag ${{ github.ref_name }})
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/*.exe
+            artifacts/*.exe.blockmap
+            artifacts/*.dmg
+            artifacts/*.zip
+            artifacts/latest.yml
+            artifacts/latest-mac.yml
+          generate_release_notes: true

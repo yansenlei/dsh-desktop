@@ -62,6 +62,23 @@ DSH Desktop 是 **DeepSeek Harness** 的桌面版 —— 一个开箱即用的�
 - 单击：显示主界面
 - 右键菜单：在浏览器打开 / 设置 / 重启服务 / 退出
 
+### 进阶：插件 npx 独立安装（开发者 / 命令行用户）
+
+桌面版已**内置**以上两个插件（局域网二维码、Telegram 桥接），普通用户无需任何操作。
+两个插件同时也以**独立 npm 包**分发，可在任意 DeepSeek Harness（`dsh web`）环境里用 npx 一键安装：
+
+```bash
+npx dsh-plugin-lan-access                  # 安装「局域网二维码」插件
+npx dsh-plugin-telegram-bridge             # 安装「Telegram 桥接」插件
+```
+
+- 安装器会把插件复制到 `~/.dsh/profiles/web/node_modules/@dsh-desktop/` 并生成注入 patch，
+  完成后按提示以 `dsh web --patch <插件>.patch.yml` 重启即可生效（可用 `--dsh-home` 指定 DSH 数据目录）。
+- 插件源码与使用说明分别在独立仓库：
+  - <https://github.com/yansenlei/dsh-plugin-lan-access>
+  - <https://github.com/yansenlei/dsh-plugin-telegram-bridge>
+- 桌面版内置版本与 npm 独立版本同源同步；桌面版用户请继续使用「设置」里的开关，无需 npx。
+
 ## 四、常见问题（FAQ）
 
 **Q: 提示「端口被占用」或一直停留在启动页？**

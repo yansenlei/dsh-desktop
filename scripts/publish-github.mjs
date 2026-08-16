@@ -6,8 +6,14 @@
  *   node scripts/publish-github.mjs [token]
  *
  * 发布对象：
- *   - dsh-desktop          主程序仓库（含 Release + 安装包上传）
- *   - dsh-desktop-plugins  内置插件独立仓库
+ *   - dsh-desktop                主程序仓库（含 Release + 安装包上传）
+ *   - dsh-plugin-lan-access      插件①：局域网二维码（独立仓库 + npm 包）
+ *   - dsh-plugin-telegram-bridge 插件②：Telegram 桥接（独立仓库 + npm 包）
+ *
+ * 插件均为独立仓库 + 独立 npm 包（npx 可单独安装）：
+ *   npm publish -C ../dsh-plugin-lan-access
+ *   npm publish -C ../dsh-plugin-telegram-bridge
+ * 本脚本负责 GitHub 侧的仓库/Release；npm 侧需先手动 publish（见插件仓库 README）。
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync, existsSync } from "node:fs";
@@ -15,9 +21,9 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const pluginsRoot = join(root, "..", "dsh-desktop-plugins");
 const OWNER = "yansenlei";
 const VERSION = "0.1.0";
+const PLUGIN_VERSION = "0.1.0"; // 与两个插件 npm 包当前版本保持一致
 
 const token = process.argv[2] || process.env.GITHUB_TOKEN;
 if (!token) {
@@ -127,14 +133,28 @@ await releaseAndUpload("dsh-desktop", `v${VERSION}`, `DeepSeek Harness Desktop v
   { name: `DeepSeek-Harness-Desktop-Setup-${VERSION}.exe`, path: installer },
 ]);
 
-// ── 插件仓库 ────────────────────────────────────────────────────────
-console.log("=== dsh-desktop-plugins ===");
-await ensureRepo("dsh-desktop-plugins", "DeepSeek Harness Desktop 内置插件（lan-access 局域网二维码 / telegram-bridge Telegram 桥接），可独立安装到任意 Harness 环境");
-if (existsSync(join(pluginsRoot, ".git"))) {
-  pushRepo(pluginsRoot, "dsh-desktop-plugins");
-} else {
-  console.warn("⚠ 插件仓库未初始化，跳过推送（可在其目录 git init 后重试）");
+// ── 插件仓库（两个独立仓库，各自含 Release）──────────────────────────
+const plugins = [
+  {
+    dir: join(root, "..", "dsh-plugin-lan-access"),
+    repo: "dsh-plugin-lan-access",
+    desc: "DeepSeek Harness 局域网二维码插件（手机扫码访问）—— 独立 npm 包，npx dsh-plugin-lan-access 可单独安装",
+  },
+  {
+    dir: join(root, "..", "dsh-plugin-telegram-bridge"),
+    repo: "dsh-plugin-telegram-bridge",
+    desc: "DeepSeek Harness Telegram 桥接插件（随时随地对话控制电脑）—— 独立 npm 包，npx dsh-plugin-telegram-bridge 可单独安装",
+  },
+];
+for (const p of plugins) {
+  console.log(`=== ${p.repo} ===`);
+  await ensureRepo(p.repo, p.desc);
+  if (existsSync(join(p.dir, ".git"))) {
+    pushRepo(p.dir, p.repo);
+  } else {
+    console.warn(`⚠ ${p.repo} 本地目录未初始化 git，跳过推送（可在其目录 git init 后重试）`);
+  }
+  await releaseAndUpload(p.repo, `v${PLUGIN_VERSION}`, `${p.repo} v${PLUGIN_VERSION}`, []);
 }
-await releaseAndUpload("dsh-desktop-plugins", `v${VERSION}`, `dsh-desktop-plugins v${VERSION}`, []);
 
 console.log("\n✔ 全部完成！");

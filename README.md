@@ -7,7 +7,7 @@
 
 **仓库**：[github.com/yansenlei/dsh-desktop](https://github.com/yansenlei/dsh-desktop)
 **下载**：安装包发布在 **GitHub Releases**（应用内「设置 → 检查更新」以 Releases 为更新源）。
-**插件**：内置插件各自独立维护、支持 npx 独立安装：
+**插件**：内置插件各自独立维护、支持 npx 独立安装（桌面版内置版本与独立仓库同源同步）：
 - [dsh-plugin-lan-access](https://github.com/yansenlei/dsh-plugin-lan-access)（局域网二维码）· `npx dsh-plugin-lan-access`
 - [dsh-plugin-telegram-bridge](https://github.com/yansenlei/dsh-plugin-telegram-bridge)（Telegram 桥接）· `npx dsh-plugin-telegram-bridge`
 
@@ -122,7 +122,7 @@ npm run dist                     # 打包 NSIS 一键安装器（release/ 目录
 ## 已知边界（v0.1）
 
 - 未做代码签名：Windows SmartScreen 会提示「未知发布者」，选择「仍要运行」即可。
-- 自动更新通道未接入（设置页「检查更新」为占位实现）。
+- 更新为「检查更新」模式：设置页查询 GitHub Releases 最新版并提示手动下载；未做静默自动升级。
 - 当前仅 Windows x64 目标；macOS/Linux 的打包配置可在 `package.json` 中扩展。
 
 ## 许可

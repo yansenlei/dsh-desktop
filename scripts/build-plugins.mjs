@@ -7,6 +7,12 @@
  * 3. 将插件包复制到 runtime 的 node_modules（服务端从此解析）。
  *
  * 用法: node scripts/build-plugins.mjs [plugin-name...]（缺省构建全部）
+ *
+ * 说明（双仓库结构）：本目录 plugins/<name> 保留插件源码，用于打包进安装包
+ * （内置插件）；插件的“外部分发”走各自独立仓库 + npm 包，见：
+ *   ../dsh-plugin-lan-access       → npm: dsh-plugin-lan-access（npx 安装）
+ *   ../dsh-plugin-telegram-bridge  → npm: dsh-plugin-telegram-bridge（npx 安装）
+ * 修改插件源码后，两边都要同步（本目录 + 独立仓库），并重跑本脚本。
  */
 import { execFileSync } from "node:child_process";
 import { mkdirSync, cpSync, rmSync, readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";

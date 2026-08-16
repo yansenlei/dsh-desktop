@@ -37,6 +37,10 @@ jobs:
       - name: Prepare DSH runtime
         run: npm run prepare:runtime
 
+      # 图标文件不入库（.gitignore），CI 上需先生成
+      - name: Generate app icons
+        run: npm run icon
+
       - name: Build app (esbuild)
         run: npm run build
 
@@ -81,6 +85,10 @@ jobs:
 
       - name: Prepare DSH runtime
         run: npm run prepare:runtime
+
+      # 图标文件不入库（.gitignore），CI 上需先生成
+      - name: Generate app icons
+        run: npm run icon
 
       - name: Build app (esbuild)
         run: npm run build

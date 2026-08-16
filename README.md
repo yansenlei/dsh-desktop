@@ -1,5 +1,7 @@
 # DeepSeek Harness Desktop（DeepSeek Harness 桌面版）
 
+![DeepSeek Harness Desktop](docs/images/deepseek-harness-banner.png)
+
 面向非技术用户的 **DeepSeek Harness** 一键安装 + 桌面客户端。
 
 > 目标：让没有技术背景的用户也能 30 秒装好并用上 DeepSeek Harness —— 无需安装

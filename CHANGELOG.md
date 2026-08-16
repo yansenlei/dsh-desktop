@@ -2,6 +2,24 @@
 
 本仓库的发布历史与维护记录。版本号遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## 维护待办（按优先级）
+
+### ⚠️ 高优先级：Electron 38 已 EOL，需升级
+
+- **现状**：`package.json` 锁定 `electron 38.8.6`（38.x 最终版）。官方支持政策下 **Electron 38.x 已结束支持**（EOL，见 https://www.electronjs.org/docs/latest/tutorial/electron-timelines#version-support-policy），不再接收安全修复。
+- **风险**：38.x 系存在已披露 CVE（如 [CVE-2026-34767](https://app.opencve.io/cve/CVE-2026-34767) HTTP 响应头注入、[CVE-2026-34772](https://vuldb.com/zh/vuln/355228) 内存损坏等）。桌面应用直接打开本机/局域网页面，建议尽快升级。
+- **升级路径**（需在有网络的环境执行）：
+  1. `npm install --save-dev electron@41`（或当前维护线 39-43 任一；41 为较稳妥的 LTS 相邻版本）
+  2. 验证 `npm run build` + `npm run smoke` 通过（Electron 内置 Node 随版本提升，dsh rc.6 的 zstd/type-stripping 要求只会更易满足）
+  3. 更新 README 中「Electron 38 / Node 22」相关描述
+  4. 重新打包并发布（`npm run dist` + 打 tag 触发 CI）
+- **升级后**：把本文档本条目移除。
+
+### 中优先级
+
+- 代码签名（消除 SmartScreen「未知发布者」，需代码签名证书）
+- macOS 自动更新适配（当前「下载并安装」仅 Windows；macOS 走打开下载页）
+
 ## [0.1.0] - 2026-08-16
 
 初始发布：DeepSeek Harness 桌面版（Windows 一键安装 + 内置插件 + 局域网访问 + Telegram 桥接）。

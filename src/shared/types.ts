@@ -73,6 +73,28 @@ export interface UpdateCheckResult {
   latest: string | null;
   upToDate: boolean;
   feedConfigured: boolean;
+  /** 新版本的 Release Notes（GitHub Release body，中英双语；未知为 null）。 */
+  body?: string | null;
+}
+
+/** 检查结果：内置 dsh 引擎 vs npm 最新版。 */
+export interface EngineCheckResult {
+  current: string | null;
+  latest: string | null;
+  upToDate: boolean;
+  /** 是否可独立更新（内置 npm CLI 可用且版本不同）。 */
+  canUpdate: boolean;
+  /** 上一个版本（用于恢复引擎）。 */
+  prevVersion: string | null;
+}
+
+/** 引擎独立更新进度。 */
+export interface EngineUpdateProgress {
+  /** stage: downloading / installing / finishing / done / error */
+  stage: string;
+  percent?: number;
+  version?: string;
+  error?: string;
 }
 
 /** 下载更新进度。 */
@@ -143,7 +165,11 @@ export const IPC = {
   updateProgress: "update:progress",
   updateStatus: "update:status",
   updateCancel: "update:cancel",
+  updateInfo: "update:info",
   engineCheck: "engine:check",
+  engineUpdate: "engine:update",
+  engineRevert: "engine:revert",
+  engineProgress: "engine:progress",
   windowMinimize: "window:minimize",
   windowClose: "window:close",
   windowSetCloseToTray: "window:set-close-to-tray",

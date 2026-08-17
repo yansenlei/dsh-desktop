@@ -15,3 +15,4 @@ minimal*-main.cjs
 node-ver-test.*
 plugins/*/lib/client.js
 .DS_Store
+runtime/dsh/npm-cli/

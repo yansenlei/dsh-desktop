@@ -138,7 +138,16 @@
         <h2 id="sec-about">关于</h2>
         <div class="card about-grid">
           <span class="k" id="lbl-version">版本</span><span id="about-version">…</span>
-          <span class="k" id="lbl-dsh-version">DSH 版本</span><span id="about-dsh-version">…</span><span class="muted" id="engine-update-hint" hidden></span>
+          <span class="k" id="lbl-dsh-version">DSH 版本</span>
+          <span class="dsh-version-cell">
+            <span id="about-dsh-version">…</span>
+            <span class="muted" id="engine-update-hint" hidden></span>
+            <span class="dsh-version-actions">
+              <button class="mini primary-mini" id="btn-engine-update" hidden>更新引擎</button>
+              <button class="mini" id="btn-engine-revert" hidden title="恢复到更新前的引擎版本">恢复引擎</button>
+            </span>
+            <span class="muted update-stats" id="engine-progress" hidden></span>
+          </span>
           <span class="k">Electron</span><span id="about-electron">…</span>
           <span class="k">Node</span><span id="about-node">…</span>
           <span class="k" id="lbl-update">更新</span>
@@ -152,6 +161,9 @@
             <div class="update-bar" id="update-bar" hidden><div class="update-bar-fill" id="update-bar-fill"></div></div>
             <span class="muted" id="update-progress" hidden></span>
             <span class="muted update-stats" id="update-stats" hidden></span>
+            <button class="mini" id="btn-update-notes" hidden>查看本次更新内容</button>
+            <pre class="update-notes" id="update-notes" hidden></pre>
+            <span class="muted update-stats" id="engine-check-result" hidden></span>
           </span>
         </div>
       </section>

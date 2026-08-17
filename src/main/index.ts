@@ -45,6 +45,14 @@ function main() {
   let harnessLoaded = false;
 
   app.setName("DeepSeek Harness Desktop");
+  // Windows：系统通知（自动更新提示等）需要 AppUserModelID，否则 toast 不显示
+  if (process.platform === "win32") {
+    try {
+      app.setAppUserModelId("com.deepseekai.dsh-desktop");
+    } catch (err) {
+      warn(`设置 AppUserModelID 失败: ${(err as Error).message}`);
+    }
+  }
 
   // ── 基础设施 ─────────────────────────────────────────────────────────
   initLogger(join(app.getPath("userData"), "logs"));
@@ -372,6 +380,7 @@ function main() {
       server,
       getAppInfo: () => getAppInfo(runtimeDir, userDataDir, dshHome),
       openSettingsWindow: () => createSettingsWindow(),
+      runtimeDir,
     });
     trace("registerIpc done");
 

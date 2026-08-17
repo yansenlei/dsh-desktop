@@ -54,10 +54,21 @@ const api = {
   openLogsDir: (): Promise<void> => ipcRenderer.invoke(IPC.logsOpen),
 
   // 更新
-  checkUpdate: (): Promise<{ current: string; latest: string | null; upToDate: boolean; feedConfigured: boolean }> =>
+  checkUpdate: (): Promise<import("../shared/types").UpdateCheckResult> =>
     ipcRenderer.invoke(IPC.updateCheck),
-  checkEngineUpdate: (): Promise<{ current: string | null; latest: string | null; upToDate: boolean }> =>
+  getUpdateInfo: (): Promise<{ version: string; body: string | null } | null> =>
+    ipcRenderer.invoke(IPC.updateInfo),
+  checkEngineUpdate: (): Promise<import("../shared/types").EngineCheckResult> =>
     ipcRenderer.invoke(IPC.engineCheck),
+  updateEngine: (): Promise<{ ok: boolean; version?: string; error?: string }> =>
+    ipcRenderer.invoke(IPC.engineUpdate),
+  revertEngine: (): Promise<{ ok: boolean; version?: string; error?: string }> =>
+    ipcRenderer.invoke(IPC.engineRevert),
+  onEngineProgress: (fn: (p: import("../shared/types").EngineUpdateProgress) => void) => {
+    const listener = (_e: unknown, p: import("../shared/types").EngineUpdateProgress) => fn(p);
+    ipcRenderer.on(IPC.engineProgress, listener);
+    return () => ipcRenderer.removeListener(IPC.engineProgress, listener);
+  },
   downloadUpdate: (): Promise<{ stage: string; percent: number | null; filePath?: string; error?: string }> =>
     ipcRenderer.invoke(IPC.updateDownload),
   installUpdate: (filePath?: string): Promise<{ ok: boolean; error?: string }> =>

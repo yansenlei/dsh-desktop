@@ -1,7 +1,7 @@
 /**
  * 设置页（壳 UI）：端口、开机自启、托盘行为、运行环境一键安装、数据/日志目录、关于。
  */
-import { setLang, detectLang, t } from "./i18n";
+import { setLang, detectLang, currentLang, t } from "./i18n";
 import type { EnvCheck, InstallProgress, UpdateProgress } from "../shared/types";
 import { LINKS } from "../shared/links";
 
@@ -53,6 +53,12 @@ const el = {
   updateBar: $("update-bar"),
   updateBarFill: $("update-bar-fill"),
   updateStats: $("update-stats"),
+  btnUpdateNotes: $<HTMLButtonElement>("btn-update-notes"),
+  updateNotes: $("update-notes"),
+  engineCheckResult: $("engine-check-result"),
+  btnEngineUpdate: $<HTMLButtonElement>("btn-engine-update"),
+  btnEngineRevert: $<HTMLButtonElement>("btn-engine-revert"),
+  engineProgress: $("engine-progress"),
   toast: $("toast"),
 };
 
@@ -62,8 +68,51 @@ let updateBusy = false; // 更新下载/安装进行中：applyLabels 不得重�
 /** 动态文案状态：语言切换时据此重渲染，避免切换后残留旧语言文案。 */
 let lastUpdateResult: "available" | "upToDate" | "placeholder" | null = null;
 let lastUpdateVer: string | null = null;
+let lastUpdateBody: string | null = null;
 let lastProgress: UpdateProgress | null = null;
 let lastEngineVer: string | null = null;
+let lastEngineStatus: "new" | "upToDate" | null = null;
+let lastEngineCurrent: string | null = null;
+let lastEngineCanUpdate = false;
+let lastEnginePrev: string | null = null;
+let engineBusy = false;
+
+/** 引擎更新错误码 → 本地化文案。 */
+function engineErrText(err?: string): string {
+  if (!err) return "";
+  const known: Record<string, string> = {
+    NO_NPM: "settings.engineErrNoNpm",
+    NO_TARGET: "settings.engineErrNoTarget",
+    VERIFY_FAILED: "settings.engineErrVerify",
+    BUSY: "settings.engineErrBusy",
+    NO_PREV: "settings.engineErrNoPrev",
+  };
+  if (known[err]) return t(known[err]);
+  if (err.startsWith("NPM_FAILED:")) return t("settings.engineErrNpmFailed") + err.slice(11).slice(0, 200);
+  return err;
+}
+
+/** 按当前界面语言选取更新内容（CHANGELOG 中英双语条目）。 */
+function pickUpdateBody(body: string): string {
+  if (currentLang() === "en" && body.includes("### English")) {
+    return body.split("### English")[1] ?? body;
+  }
+  if (currentLang() === "zh" && body.includes("### 中文")) {
+    return body.split("### 中文")[1] ?? body;
+  }
+  return body;
+}
+
+/** 渲染「查看本次更新内容」按钮（有内容才显示）。 */
+function renderUpdateNotes() {
+  const has = !!lastUpdateBody && !!lastUpdateVer;
+  el.btnUpdateNotes.hidden = !has;
+  if (!has) {
+    el.updateNotes.hidden = true;
+    return;
+  }
+  el.updateNotes.textContent = pickUpdateBody(lastUpdateBody!);
+}
 
 /** 主进程错误码 → 本地化文案；非已知码原样展示（多为网络层英文错误）。 */
 function updateErrText(err?: string): string {
@@ -79,6 +128,15 @@ function updateErrText(err?: string): string {
   };
   return known[err] ? t(known[err]) : err;
 }
+/** 渲染引擎操作按钮（可更新 / 可恢复）。 */
+function renderEngineActions() {
+  el.btnEngineUpdate.hidden = !lastEngineCanUpdate;
+  el.btnEngineRevert.hidden = !(lastEnginePrev && lastEnginePrev !== lastEngineCurrent);
+  if (!lastEngineCanUpdate && !(lastEnginePrev && lastEnginePrev !== lastEngineCurrent)) {
+    el.engineProgress.hidden = true;
+  }
+}
+
 function toast(msg: string) {
   el.toast.textContent = msg;
   el.toast.classList.add("show");
@@ -285,11 +343,23 @@ async function main() {
   el.aboutNode.textContent = info.node;
   // 引擎更新提示：内置 Harness 引擎若落后于 npm 最新版，提示用户（静默失败）
   window.dshDesktop.checkEngineUpdate().then((e) => {
+    lastEngineCurrent = e.current;
+    lastEngineVer = e.latest;
+    lastEngineCanUpdate = e.canUpdate;
+    lastEnginePrev = e.prevVersion;
     if (e.latest && !e.upToDate && e.current) {
-      lastEngineVer = e.latest;
-      el.engineUpdateHint.hidden = false;
-      el.engineUpdateHint.textContent = t("settings.engineUpdateAvailable").replace("{v}", e.latest);
+      lastEngineStatus = "new";
+      // 可独立更新时提示按钮即可，不再说「随应用更新提供」
+      if (e.canUpdate) {
+        el.engineUpdateHint.hidden = true;
+      } else {
+        el.engineUpdateHint.hidden = false;
+        el.engineUpdateHint.textContent = t("settings.engineUpdateAvailable").replace("{v}", e.latest);
+      }
+    } else {
+      lastEngineStatus = e.latest === null ? null : "upToDate";
     }
+    renderEngineActions();
   }).catch(() => { /* 静默 */ });
   el.btnCheckUpdate.addEventListener("click", async () => {
     // Loading 态：禁用按钮 + 转圈 + 「检查中…」，等待 checkUpdate 返回
@@ -300,7 +370,38 @@ async function main() {
     el.updateBar.hidden = true;
     el.updateProgress.hidden = true;
     try {
-      const r = await window.dshDesktop.checkUpdate();
+      const [r, e] = await Promise.all([
+        window.dshDesktop.checkUpdate(),
+        window.dshDesktop.checkEngineUpdate().catch(() => null),
+      ]);
+      // 引擎状态（检查成功才展示，避免把失败误报为"已是最新"）
+      if (e) {
+        lastEngineCurrent = e.current;
+        lastEngineVer = e.latest;
+        lastEngineCanUpdate = e.canUpdate;
+        lastEnginePrev = e.prevVersion;
+        if (e.latest && !e.upToDate) {
+          lastEngineStatus = "new";
+          // 可独立更新：隐藏「随应用更新提供」提示，显示更新按钮
+          if (e.canUpdate) {
+            el.engineUpdateHint.hidden = true;
+          } else {
+            el.engineUpdateHint.hidden = false;
+            el.engineUpdateHint.textContent = t("settings.engineUpdateAvailable").replace("{v}", e.latest);
+          }
+          el.engineCheckResult.hidden = false;
+          el.engineCheckResult.textContent = t(e.canUpdate ? "settings.engineNew" : "settings.engineNewDeferred").replace("{v}", e.latest);
+        } else {
+          lastEngineStatus = "upToDate";
+          el.engineCheckResult.hidden = false;
+          el.engineCheckResult.textContent = t("settings.engineUpToDate");
+        }
+        renderEngineActions();
+      } else {
+        lastEngineStatus = null;
+        el.engineCheckResult.hidden = true;
+        renderEngineActions();
+      }
       if (!r.feedConfigured) {
         // 更新源全部不可用（限流/网络），不能误报"已是最新"
         lastUpdateResult = "placeholder";
@@ -310,7 +411,9 @@ async function main() {
       } else if (r.latest && !r.upToDate) {
         lastUpdateResult = "available";
         lastUpdateVer = r.latest;
+        lastUpdateBody = r.body ?? null;
         el.updateResult.textContent = t("settings.updateAvailable").replace("{v}", r.latest);
+        renderUpdateNotes();
         // 有可用更新：Windows/macOS 均提供「下载并安装」，其它平台打开下载页
         if (info.platform === "win32" || info.platform === "darwin") {
           el.btnUpdateInstall.hidden = false;
@@ -407,8 +510,80 @@ async function main() {
       if (info.platform === "win32" || info.platform === "darwin") {
         el.btnUpdateInstall.hidden = false;
       }
+      // 自动引导路径无 body：异步拉取主进程记忆的最新版本信息
+      window.dshDesktop.getUpdateInfo().then((inf) => {
+        if (inf && inf.version === version) {
+          lastUpdateBody = inf.body ?? null;
+          renderUpdateNotes();
+        }
+      }).catch(() => { /* 忽略 */ });
     }
   };
+  // ── Harness 引擎独立更新 / 恢复 ──
+  const runEngineAction = async (action: "update" | "revert") => {
+    if (engineBusy) return;
+    engineBusy = true;
+    el.btnEngineUpdate.disabled = true;
+    el.btnEngineRevert.disabled = true;
+    el.engineProgress.hidden = false;
+    el.engineProgress.textContent = t("settings.engineUpdating");
+    try {
+      const r = action === "update" ? await window.dshDesktop.updateEngine() : await window.dshDesktop.revertEngine();
+      if (r.ok && r.version) {
+        const info2 = await window.dshDesktop.getAppInfo();
+        el.aboutDshVersion.textContent = info2.dshVersion ?? "-";
+        // 重新检查引擎状态：刷新 canUpdate / upToDate / prevVersion，
+        // 否则「更新引擎」按钮会因旧的 canUpdate 而残留
+        const e2 = await window.dshDesktop.checkEngineUpdate().catch(() => null);
+        if (e2) {
+          lastEngineCurrent = e2.current;
+          lastEngineVer = e2.latest;
+          lastEngineCanUpdate = e2.canUpdate;
+          lastEnginePrev = e2.prevVersion;
+          lastEngineStatus = e2.upToDate ? "upToDate" : e2.latest && !e2.upToDate && e2.current ? "new" : null;
+          el.engineUpdateHint.hidden = true;
+          el.engineCheckResult.hidden = false;
+          el.engineCheckResult.textContent = t("settings.engineUpToDate");
+        } else {
+          lastEnginePrev = null;
+        }
+        renderEngineActions();
+        const msg = t(action === "update" ? "settings.engineUpdated" : "settings.engineReverted").replace("{v}", r.version);
+        el.engineProgress.textContent = msg;
+        toast(msg);
+      } else {
+        el.engineProgress.textContent = engineErrText(r.error);
+      }
+    } finally {
+      engineBusy = false;
+      el.btnEngineUpdate.disabled = false;
+      el.btnEngineRevert.disabled = false;
+    }
+  };
+  el.btnEngineUpdate.addEventListener("click", () => void runEngineAction("update"));
+  el.btnEngineRevert.addEventListener("click", () => void runEngineAction("revert"));
+  window.dshDesktop.onEngineProgress((p) => {
+    if (p.stage === "installing" && p.version) {
+      el.engineProgress.hidden = false;
+      el.engineProgress.textContent = t("settings.engineInstalling").replace("{v}", p.version);
+    } else if (p.stage === "finishing") {
+      el.engineProgress.hidden = false;
+      el.engineProgress.textContent = t("settings.engineFinishing");
+    } else if (p.stage === "done") {
+      el.engineProgress.hidden = false;
+      el.engineProgress.textContent = t("settings.engineUpdated").replace("{v}", p.version ?? "");
+    } else if (p.stage === "error") {
+      el.engineProgress.hidden = false;
+      el.engineProgress.textContent = engineErrText(p.error);
+    }
+  });
+
+  el.btnUpdateNotes.addEventListener("click", () => {
+    el.updateNotes.hidden = !el.updateNotes.hidden;
+    el.btnUpdateNotes.textContent = t(el.updateNotes.hidden ? "settings.updateNotesBtn" : "settings.updateNotesBtn");
+  });
+  renderUpdateNotes();
+
   // 主进程在自动更新检查发现新版本时推送（设置窗已打开的场景）
   window.dshDesktop.onFocusAbout((payload) => focusAbout(payload.version));
   // 打开设置窗时携带的 query 参数（focus=about&update=<ver>）
@@ -475,12 +650,33 @@ function applyLabels() {
   el.btnCheckUpdate.textContent = t("settings.checkUpdate");
   if (!updateBusy) el.btnUpdateInstall.textContent = t("settings.downloadAndInstall");
   el.btnCancelUpdate.title = t("settings.cancelTitle");
+  el.btnEngineUpdate.title = t("settings.engineUpdateBtnTip");
+  el.btnEngineRevert.title = t("settings.engineRevertBtnTip");
   el.selLanguage.options[0].textContent = t("settings.langAuto");
   // 语言切换后重渲染动态文案（检查结果/引擎提示/进度），避免残留旧语言
-  if (lastEngineVer) {
+  if (lastEngineStatus === "new" && lastEngineVer && !lastEngineCanUpdate) {
     el.engineUpdateHint.hidden = false;
     el.engineUpdateHint.textContent = t("settings.engineUpdateAvailable").replace("{v}", lastEngineVer);
+  } else {
+    el.engineUpdateHint.hidden = true;
   }
+  if (lastEngineStatus === "new" && lastEngineVer) {
+    if (lastEngineCanUpdate) {
+      el.engineUpdateHint.hidden = true;
+    } else {
+      el.engineUpdateHint.hidden = false;
+      el.engineUpdateHint.textContent = t("settings.engineUpdateAvailable").replace("{v}", lastEngineVer);
+    }
+    el.engineCheckResult.hidden = false;
+    el.engineCheckResult.textContent = t(lastEngineCanUpdate ? "settings.engineNew" : "settings.engineNewDeferred").replace("{v}", lastEngineVer);
+  } else if (lastEngineStatus === "upToDate") {
+    el.engineCheckResult.hidden = false;
+    el.engineCheckResult.textContent = t("settings.engineUpToDate");
+  } else {
+    el.engineCheckResult.hidden = true;
+  }
+  renderEngineActions();
+  if (lastUpdateBody) renderUpdateNotes();
   if (lastUpdateResult === "available" && lastUpdateVer) {
     el.updateResult.textContent = t("settings.updateAvailable").replace("{v}", lastUpdateVer);
   } else if (lastUpdateResult === "upToDate") {

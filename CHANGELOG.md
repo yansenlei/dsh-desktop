@@ -9,31 +9,77 @@
 - 正式代码签名 + 公证（消除 SmartScreen「未知发布者」与 macOS「无法验证开发者」弹窗，需代码签名证书 / Apple 开发者证书 + 公证）
 - 更新体验优化（可选：迁移 electron-updater 实现差分更新 / sha512 校验 / 失败回滚）
 
+## [0.3.0] - 2026-08-17
+
+### 中文
+功能更新（引擎独立更新 / 更新体验 / 兼容性）：
+
+- **功能**：**Harness 引擎独立更新**——内置 npm CLI，应用内一键把引擎升级到 npm 最新版（无需重装安装包），自动解析整棵依赖树、补齐平台原生包；失败可「恢复引擎」回滚到上一版本；macOS 更新后自动重新签名
+- **功能**：自动更新检查联动引擎状态；「更新引擎 / 恢复引擎」按钮按状态智能显示（引擎最新且服务正常时自动清除回滚记录，避免按钮长期占位）
+- **功能**：检查更新 / 自动引导发现新版本时，可展开查看「**本次更新内容**」——中英文按界面语言选择展示
+- **修复**：设置面板更新行 / 引擎提示文本的中英文与排版（含长提示导致 About 表格错位、英文模式残留中文等）
+- **兼容**：Windows 系统通知设置 AppUserModelID（toast 正常显示）
+- **文档**：CHANGELOG 改为中英双语条目；GitHub Release Notes 自动带上完整更新内容
+
+### English
+Features (independent engine updates / update UX / compatibility):
+
+- **Feature**: **Independent Harness engine updates** — a bundled npm CLI upgrades the engine to the npm latest in one click (no installer reinstall), resolving the full dependency tree and re-adding platform packages; "Restore Engine" rolls back on failure; macOS re-signs automatically after an update
+- **Feature**: The update flow now reflects engine status; "Update / Restore Engine" buttons show intelligently (rollback record auto-cleared once the engine is current and the service is healthy, so buttons don't linger)
+- **Feature**: When a new version is found, "**View update notes**" can be expanded — shown in zh/en according to the UI language
+- **Fix**: Chinese/English wording and layout of the Settings update row and engine hints (including the long-hint About-grid misalignment and leftover Chinese in English mode)
+- **Compat**: Windows notifications set the AppUserModelID so toasts display correctly
+- **Docs**: CHANGELOG entries are now bilingual; GitHub Release Notes automatically include the full changelog
+
 ## [0.2.8] - 2026-08-17
 
+### 中文
 功能更新（窗口行为 / 更新链路 / 插件体验）：
 
 - **功能**：macOS 关闭主窗体只隐藏窗口（Dock 图标点击唤回），符合 mac 使用习惯
 - **功能**：**自动更新检查**——启动时一次 + 每天 09:00 固定检查；发现新版本弹系统通知并打开设置窗滚动到「关于」模块（高亮展示新版本，同一版本只提示一次）
 - **功能**：更新下载展示**进度条 + 已下载/总大小/实时网速**；支持**取消下载**（✕ 按钮 + 原生确认框）；设置窗关闭重开后恢复"更新中"状态；「检查更新」带 Loading 态
 - **修复**：更新检查源增加 jsDelivr `latest.json` 兜底（GitHub API 限流时不再误报"已是最新"）；下载多源自动切换（gh-proxy 镜像 → 直连 → 备用镜像，每源重试）；友好错误改为语言无关错误码按界面语言翻译
-- **功能**：两个内置插件接入 Harness **locale 服务**——文案跟随 Harness 语言设置即时切换（修复英文模式残留中文）；侧边栏折叠时按钮改为**上下堆叠纯图标**（以框架 `wide` prop + 宿主折叠类名为信号）；Harness 设置页新增「**DSH Desktop 设置**」入口（打开桌面设置窗，重复点击只聚焦）
+- **功能**：两个内置插件接入 Harness **locale 服务**——文案跟随 Harness 语言设置即时切换（修复英文模式残留中文）；侧边栏折叠时按钮改为**上下堆叠纯图标**；Harness 设置页新增「**DSH Desktop 设置**」入口（打开桌面设置窗，重复点击只聚焦）
 - **界面**：设置页「关于」更新行小按钮对齐优化
+
+### English
+Features (window behavior / update pipeline / plugin experience):
+
+- **Feature**: Closing the main window on macOS now only hides it (click the Dock icon to bring it back)
+- **Feature**: **Automatic update checks** — on startup plus daily at 09:00; when a new version is found, a system notification appears and the Settings window opens scrolled to About (highlighted, once per version)
+- **Feature**: Update downloads show a **progress bar + downloaded/total size + live speed**; supports **cancel** (✕ + native confirm); reopening Settings mid-download restores the in-progress state; "Check for updates" has a loading state
+- **Fix**: Update sources gained a jsDelivr `latest.json` fallback (no more false "up to date" on GitHub API rate limits); downloads auto-switch sources (gh-proxy mirror → direct → backup mirror, retried per source); friendly errors are language-neutral codes translated by the UI
+- **Feature**: Both built-in plugins now use the Harness **locale service** — text follows the Harness language setting instantly (fixes leftover Chinese in English mode); collapsed sidebar shows **stacked icon-only buttons**; the Harness settings page gained a "**DSH Desktop Settings**" entry (opens the desktop Settings, focuses without duplicating)
+- **UI**: About-row update buttons are now properly aligned and compact
 
 ## [0.2.7] - 2026-08-16
 
+### 中文
 功能更新与 CI 修复：
 
-- **功能**：托盘右键菜单（Windows）与菜单栏 / Dock 右键菜单（macOS）、设置中心新增四个网页跳转：**用户指南 / 问题反馈 / DSH 网站 / DSHD 网站**（设置中心新增「帮助与反馈」区块，链接集中在 `src/shared/links.ts`）
+- **功能**：托盘右键菜单（Windows）与菜单栏 / Dock 右键菜单（macOS）、设置中心新增四个网页跳转：**用户指南 / 问题反馈 / DSH 网站 / DSHD 网站**（设置中心新增「帮助与反馈」区块）
 - **文档**：README 顶部添加横幅图
-- **CI**：Intel mac 构建移出自动流水线（macos-13 公共 runner 长期排队，导致 workflow 永远显示未完成、看似"任务失败"）；改为手动 workflow_dispatch 时按需补产 x64 资产并补传到指定 tag 的 Release
-- **CI**：mac 打包改由 `afterPack` 钩子用 `codesign` 直接 ad-hoc 签名（electron-builder 内置 osx-sign 的并行 walk 在数万文件的 dsh-runtime 上触发 `EMFILE: too many open files`，上游 electron/osx-sign#286 修复尚未合并）；打包步骤同时提高 fd 上限
+- **CI**：Intel mac 构建移出自动流水线（macos-13 公共 runner 长期排队导致 workflow 永远显示未完成）；改为手动 workflow_dispatch 按需补产 x64 资产；mac 打包改由 `afterPack` 钩子 `codesign` 签名并提高 fd 上限（修复 `EMFILE`）
+
+### English
+Features and CI fixes:
+
+- **Feature**: Tray (Windows) and menu-bar/Dock (macOS) context menus plus the Settings center gained four links: **User Guide / Report an Issue / DSH Website / DSHD Website** (a "Help & Feedback" section in Settings)
+- **Docs**: Banner image added to the README
+- **CI**: Intel macOS builds moved out of the automatic pipeline (macos-13 runners rarely available, leaving workflows stuck "in progress"); now on-demand via workflow_dispatch; macOS packaging signs via an `afterPack` codesign hook with a raised fd limit (fixes `EMFILE`)
 
 ## [0.2.6] - 2026-08-16
 
+### 中文
 功能更新：
 
-- **功能**：局域网插件「未开启」提示新增 **「一键开启局域网访问」** 与 **「打开桌面端设置」** 快捷按钮——桌面端窗口内可一键开启并自动重启服务（重启后页面自动重载），或直接弹出桌面端设置窗口；按钮仅在桌面端窗口显示，手机浏览器访问时自动隐藏，保持原引导文案
+- **功能**：局域网插件「未开启」提示新增 **「一键开启局域网访问」** 与 **「打开桌面端设置」** 快捷按钮——桌面端窗口内可一键开启并自动重启服务，或直接弹出桌面端设置窗口；按钮仅在桌面端窗口显示，手机浏览器访问时自动隐藏
+
+### English
+Features:
+
+- **Feature**: The LAN plugin's "off" state now offers **"Enable LAN Access"** and **"Open Desktop Settings"** shortcut buttons — one-click enable with automatic service restart, or open the desktop Settings directly; buttons only show in the desktop window and auto-hide on phone browsers
 
 ## [0.2.5] - 2026-08-16
 

@@ -196,9 +196,29 @@ jobs:
           path: artifacts
           merge-multiple: true
 
+      # 从 CHANGELOG.md 提取当前版本的条目（中英双语）作为 Release Notes
+      - name: Extract changelog for release
+        id: changelog
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          BODY=$(python3 -c "
+import re, sys
+ver = '$VERSION'
+text = open('CHANGELOG.md', encoding='utf-8').read()
+pat = re.compile(r'^## \[' + re.escape(ver) + r'\][^\n]*\n(.*?)(?=^## \[|\Z)', re.M | re.S)
+m = pat.search(text)
+print((m.group(1).strip() if m else '') or 'See repository CHANGELOG.md.')
+")
+          {
+            echo "body<<EOF"
+            echo "$BODY"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Publish release (tag ${{ github.ref_name }})
         uses: softprops/action-gh-release@v2
         with:
+          body: ${{ steps.changelog.outputs.body }}
           files: |
             artifacts/*.exe
             artifacts/*.exe.blockmap
@@ -206,7 +226,7 @@ jobs:
             artifacts/*.zip
             artifacts/latest.yml
             artifacts/latest-mac.yml
-          generate_release_notes: true
+          generate_release_notes: false
 
   # Intel mac 资产：手动 workflow_dispatch 时构建并补传到指定 tag 的 Release。
   # 注意：latest-mac.yml 由 arm64 job 唯一产出（保证自动更新只有一份）。

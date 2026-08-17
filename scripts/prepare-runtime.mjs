@@ -146,6 +146,27 @@ if (existsSync(sharpWasm)) {
   console.log("裁剪: runtime/dsh/node_modules/@img/sharp-wasm32");
 }
 
+// ── 内置 npm CLI：支持应用内「Harness 引擎独立更新」 ──────────────────
+// 桌面应用打包后不含 npm；引擎更新（npm install @deepseek-ai/dsh@latest）
+// 需要真正的依赖解析器。这里把 npm CLI 及其纯 JS 依赖装到
+// runtime/dsh/npm-cli/ 下，运行时用 ELECTRON_RUN_AS_NODE 直接执行。
+const npmCliDir = join(bundleDir, "npm-cli");
+if (!existsSync(join(npmCliDir, "node_modules", "npm", "bin", "npm-cli.js"))) {
+  console.log("内置 npm CLI 到 runtime/dsh/npm-cli/ …");
+  const n = spawnSync(process.platform === "win32" ? "npm.cmd" : "npm", ["install", "--prefix", npmCliDir, "--no-audit", "--no-fund", "--ignore-scripts", "--loglevel=error", "npm@11", "--cache", cacheDir], {
+    cwd: bundleDir,
+    stdio: "inherit",
+    shell: process.platform === "win32",
+    env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
+  });
+  if (n.status !== 0) {
+    throw new Error(`内置 npm CLI 安装失败 (code=${n.status})，引擎独立更新将不可用`);
+  }
+  console.log("✔ npm CLI 就绪: runtime/dsh/npm-cli");
+} else {
+  console.log("npm CLI 已存在，跳过");
+}
+
 // 写入标记
 const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
 const dshPkgPath = join(bundleDir, "node_modules", "@deepseek-ai", "dsh", "package.json");

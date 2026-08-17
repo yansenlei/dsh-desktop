@@ -78,6 +78,7 @@ const dict = {
       updateAvailable: "发现新版本 {v}，可下载并安装",
       updatePlaceholder: "无法连接更新源（需访问 GitHub）",
       updateDownloading: "正在下载更新…",
+      updateNotesBtn: "查看本次更新内容",
       updateDownloadingBtn: "下载中…",
       updateInstallingBtn: "安装中…",
       updateCancelled: "已取消下载",
@@ -105,6 +106,25 @@ const dict = {
       errorPrefix: "[错误]",
       dshVersion: "DSH 版本",
       engineUpdateAvailable: "检测到 Harness 引擎新版本 {v}，将在下个应用版本中提供",
+      engineNew: "Harness 引擎有新版本 v{v}，可点击「更新引擎」",
+      engineNewDeferred: "Harness 引擎有新版本 v{v}（随应用更新提供）",
+      engineUpToDate: "Harness 引擎已是最新",
+      engineUpdateBtn: "更新引擎",
+      engineUpdateBtnTip: "把内置 Harness 引擎升级到 npm 最新版（无需重装应用）",
+      engineRevertBtn: "恢复引擎",
+      engineRevertBtnTip: "恢复到更新前的引擎版本（回滚保险）",
+      engineUpdating: "正在更新引擎…",
+      engineInstalling: "正在安装引擎 v{v}…",
+      engineFinishing: "正在收尾（签名/校验）…",
+      engineUpdated: "Harness 引擎已更新到 v{v}，服务已重启",
+      engineReverted: "已恢复引擎 v{v}，服务已重启",
+      engineErrNoNpm: "当前版本未内置 npm，引擎独立更新不可用（请升级应用）",
+      engineErrNoTarget: "获取引擎最新版本失败",
+      engineErrVerify: "引擎安装校验失败，请重试",
+      engineErrBusy: "引擎更新正在进行中",
+      engineErrNoPrev: "没有可恢复的上一个版本",
+      engineErrNode: "引擎新版本需要更新的运行环境，将随应用更新提供",
+      engineErrNpmFailed: "引擎安装失败：",
       update: "更新",
       restartBadge: "重启 ×{n}",
       help: "帮助与反馈",
@@ -193,6 +213,7 @@ const dict = {
       updateAvailable: "New version {v} found — ready to download & install",
       updatePlaceholder: "Cannot reach update source (needs GitHub access)",
       updateDownloading: "Downloading update…",
+      updateNotesBtn: "View update notes",
       updateDownloadingBtn: "Downloading…",
       updateInstallingBtn: "Installing…",
       updateCancelled: "Download cancelled",
@@ -220,6 +241,25 @@ const dict = {
       errorPrefix: "[Error]",
       dshVersion: "DSH Version",
       engineUpdateAvailable: "New Harness engine {v} available, will ship in the next app release",
+      engineNew: "Harness engine v{v} available — click \"Update Engine\"",
+      engineNewDeferred: "Harness engine v{v} available (ships with the app update)",
+      engineUpToDate: "Harness engine is up to date",
+      engineUpdateBtn: "Update Engine",
+      engineUpdateBtnTip: "Upgrade the bundled Harness engine to the npm latest (no reinstall needed)",
+      engineRevertBtn: "Restore Engine",
+      engineRevertBtnTip: "Restore the previous engine version (rollback safety)",
+      engineUpdating: "Updating engine…",
+      engineInstalling: "Installing engine v{v}…",
+      engineFinishing: "Finishing (sign/verify)…",
+      engineUpdated: "Harness engine updated to v{v}, service restarted",
+      engineReverted: "Engine restored to v{v}, service restarted",
+      engineErrNoNpm: "This build has no bundled npm; engine updates are unavailable (please update the app)",
+      engineErrNoTarget: "Failed to fetch the latest engine version",
+      engineErrVerify: "Engine install verification failed, please retry",
+      engineErrBusy: "An engine update is already in progress",
+      engineErrNoPrev: "No previous version to restore",
+      engineErrNode: "The new engine needs a newer runtime; it will ship with the app update",
+      engineErrNpmFailed: "Engine install failed: ",
       update: "Updates",
       restartBadge: "Restarts ×{n}",
       help: "Help & Feedback",
@@ -249,6 +289,11 @@ export function detectLang(pref: LangPref = "auto"): Lang {
 
 export function setLang(l: Lang) {
   lang = l;
+}
+
+/** 当前界面语言（用于按语言选择更新内容等）。 */
+export function currentLang(): Lang {
+  return lang;
 }
 
 type Dict = (typeof dict)["zh"];

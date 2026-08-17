@@ -4,7 +4,7 @@
  * 职责：应用生命周期、单实例、主窗口（壳 UI → Harness UI）、设置窗口、
  * 系统托盘、服务管理编排、退出清理、smoke 测试模式。
  */
-import { app, BrowserWindow, Tray, Menu, nativeImage, shell } from "electron";
+import { app, BrowserWindow, Tray, Menu, nativeImage, shell, Notification } from "electron";
 import { join } from "node:path";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { IPC, ServerStatus, AppInfo, DesktopSettings, DEFAULT_SETTINGS } from "../shared/types";
@@ -13,6 +13,7 @@ import { initLogger, info, warn, error as logError } from "./logger";
 import { initSettings, getSettings, setSettings } from "./settings";
 import { DshServerManager } from "./server";
 import { registerIpc } from "./ipc";
+import { checkAutoUpdate } from "./ipc";
 import { t } from "./l10n";
 
 /** Smoke/诊断追踪：写入 SMOKE_TRACE 指向的文件（工作区内，便于受限环境排查）。 */
@@ -102,7 +103,9 @@ function main() {
     }
 
     mainWindow.on("close", (e) => {
-      if (!quitting && getSettings().closeToTray) {
+      // macOS：点关闭只隐藏窗口（mac 应用惯例），点击 Dock 图标（activate）再唤回；
+      // 真正退出走菜单/托盘「退出」或 Cmd+Q。Windows：尊重「关闭时最小化到托盘」设置。
+      if (process.platform === "darwin" || (!quitting && getSettings().closeToTray)) {
         e.preventDefault();
         mainWindow?.hide();
       }
@@ -134,7 +137,7 @@ function main() {
     return mainWindow;
   }
 
-  function createSettingsWindow() {
+  function createSettingsWindow(query?: Record<string, string>) {
     if (settingsWindow && !settingsWindow.isDestroyed()) {
       settingsWindow.focus();
       return;
@@ -159,7 +162,7 @@ function main() {
     settingsWindow.on("closed", () => {
       settingsWindow = null;
     });
-    settingsWindow.loadFile(join(__dirname, "../renderer/settings.html"));
+    settingsWindow.loadFile(join(__dirname, "../renderer/settings.html"), query ? { query } : undefined);
   }
 
   // ── 服务状态 → 窗口导航 ──────────────────────────────────────────────
@@ -235,10 +238,125 @@ function main() {
     }
   }
 
+  // ── 自动更新检查：启动时一次 + 每天固定时间（09:00）一次 ───────────
+  const AUTO_CHECK_HOUR = 9; // 每日固定检查时间（本地时区）
+  const autoCheckStatePath = join(userDataDir, "update-check.json");
+
+  interface AutoCheckState {
+    lastCheckDate?: string;
+    /** 已提示过的新版本号：同一版本只提示一次，避免每次启动都打扰。 */
+    notifiedVersion?: string;
+  }
+
+  function readAutoCheckState(): AutoCheckState {
+    try {
+      return JSON.parse(readFileSync(autoCheckStatePath, "utf8")) as AutoCheckState;
+    } catch {
+      return {};
+    }
+  }
+
+  function writeAutoCheckState(st: AutoCheckState) {
+    try {
+      writeFileSync(autoCheckStatePath, JSON.stringify(st, null, 2), "utf8");
+    } catch {
+      /* 忽略 */
+    }
+  }
+
+  function todayStr(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+
+  /** 引导用户到设置窗「关于」模块并展示新版本。 */
+  function showUpdateInSettings(version: string) {
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+      settingsWindow.focus();
+      settingsWindow.webContents.send(IPC.settingsFocusAbout, { version });
+    } else {
+      createSettingsWindow({ focus: "about", update: version });
+    }
+  }
+
+  /** 执行一次自动检查：发现新版本 → 系统通知 + 打开设置窗定位「关于」模块。 */
+  async function runAutoUpdateCheck() {
+    let result;
+    try {
+      result = await checkAutoUpdate();
+    } catch (err) {
+      warn(`自动更新检查异常: ${(err as Error).message}`);
+      return;
+    }
+    if (!result.feedConfigured) {
+      warn("自动更新检查: 更新源不可用，跳过");
+      return;
+    }
+    const st = readAutoCheckState();
+    st.lastCheckDate = todayStr();
+    if (!result.latest || result.upToDate) {
+      // 已是最新：清除旧的已提示记录
+      if (st.notifiedVersion) {
+        delete st.notifiedVersion;
+        writeAutoCheckState(st);
+      }
+      return;
+    }
+    if (st.notifiedVersion === result.latest) return; // 同一版本不重复打扰
+    st.notifiedVersion = result.latest;
+    writeAutoCheckState(st);
+    info(`自动更新检查: 发现新版本 v${result.latest}（当前 v${result.current}），提示用户`);
+    // 系统通知（点击 → 打开设置窗「关于」模块）
+    try {
+      if (Notification.isSupported()) {
+        const n = new Notification({
+          title: t("update.notifyTitle"),
+          body: t("update.notifyBody").replace("{v}", result.latest),
+        });
+        n.on("click", () => showUpdateInSettings(result.latest!));
+        n.show();
+      }
+    } catch (err) {
+      warn(`系统通知失败: ${(err as Error).message}`);
+    }
+    // 直接打开设置窗并滚动到「关于」模块
+    showUpdateInSettings(result.latest);
+  }
+
+  /** 距下一次 09:00 的毫秒数（已过则取次日）。 */
+  function msUntilNextDailyCheck(): number {
+    const now = new Date();
+    const next = new Date(now.getFullYear(), now.getMonth(), now.getDate(), AUTO_CHECK_HOUR, 0, 0, 0);
+    if (next.getTime() <= now.getTime()) next.setDate(next.getDate() + 1);
+    return next.getTime() - now.getTime();
+  }
+
+  function startAutoUpdateChecks() {
+    // 启动后延迟 20s 检查一次（避开启动高峰）
+    setTimeout(() => {
+      void runAutoUpdateCheck();
+    }, 20_000);
+    // 每天固定时间检查（setTimeout 链，避免 setInterval 长期漂移）
+    let dailyTimer: ReturnType<typeof setTimeout>;
+    const scheduleDaily = () => {
+      dailyTimer = setTimeout(() => {
+        void runAutoUpdateCheck();
+        scheduleDaily();
+      }, msUntilNextDailyCheck());
+    };
+    scheduleDaily();
+    app.on("before-quit", () => clearTimeout(dailyTimer));
+  }
+
   // ── 应用生命周期 ─────────────────────────────────────────────────────
   const smoke = process.env.DSHDESKTOP_SMOKE === "1";
 
   app.on("second-instance", () => {
+    showMainWindow();
+  });
+
+  // macOS：点击 Dock 图标或再次激活应用时唤回主窗口（配合「关闭即隐藏」）
+  app.on("activate", () => {
     showMainWindow();
   });
 
@@ -269,6 +387,9 @@ function main() {
     createMainWindow();
     trace("server.start");
     await server.start();
+
+    // ── 自动更新检查：启动时 + 每天固定时间（09:00） ────────────────
+    startAutoUpdateChecks();
   });
 
   app.on("before-quit", async (e) => {

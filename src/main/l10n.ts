@@ -20,6 +20,14 @@ const dict: Record<string, Record<string, unknown>> = {
       helpDshdSite: "DSHD 网站",
       quit: "退出",
     },
+    update: {
+      cancelMsg: "确定要取消本次更新下载吗？",
+      cancelDetail: "已下载的部分会被丢弃，稍后需重新开始下载。",
+      keep: "继续下载",
+      cancelDownload: "取消下载",
+      notifyTitle: "发现新版本",
+      notifyBody: "DeepSeek Harness Desktop v{v} 已发布，点击查看更新",
+    },
   },
   en: {
     settingsTitle: "DeepSeek Harness Desktop Settings",
@@ -34,6 +42,14 @@ const dict: Record<string, Record<string, unknown>> = {
       helpDshSite: "DSH Website",
       helpDshdSite: "DSHD Website",
       quit: "Quit",
+    },
+    update: {
+      cancelMsg: "Cancel this update download?",
+      cancelDetail: "Downloaded progress will be discarded; you will need to start over later.",
+      keep: "Keep downloading",
+      cancelDownload: "Cancel download",
+      notifyTitle: "New version available",
+      notifyBody: "DeepSeek Harness Desktop v{v} is out — click to view the update",
     },
   },
 };

@@ -77,10 +77,16 @@ export interface UpdateCheckResult {
 
 /** 下载更新进度。 */
 export interface UpdateProgress {
-  /** 阶段：checking / downloading / downloaded / installing / done / error */
+  /** 阶段：checking / downloading / downloaded / installing / done / error / retrying */
   stage: string;
   /** 0-100（尽力估算）。 */
   percent: number | null;
+  /** 已下载字节数（downloading / downloaded 阶段提供）。 */
+  downloadedBytes?: number;
+  /** 总字节数（Content-Length，未知时为 0）。 */
+  totalBytes?: number;
+  /** 当前网速（字节/秒，平滑估算）。 */
+  speedBps?: number;
   /** 下载到的安装包本地路径（downloaded 后可用）。 */
   filePath?: string;
   error?: string;
@@ -135,11 +141,14 @@ export const IPC = {
   updateDownload: "update:download",
   updateInstall: "update:install",
   updateProgress: "update:progress",
+  updateStatus: "update:status",
+  updateCancel: "update:cancel",
   engineCheck: "engine:check",
   windowMinimize: "window:minimize",
   windowClose: "window:close",
   windowSetCloseToTray: "window:set-close-to-tray",
   openSettings: "window:open-settings",
+  settingsFocusAbout: "settings:focus-about",
 } as const;
 
 /** 渲染层通过 preload 暴露的全局 API 名称。 */

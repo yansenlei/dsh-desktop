@@ -11,36 +11,75 @@ import QRCode from "qrcode";
 
 const PLUGIN_ID = "@dsh-desktop/telegram-bridge";
 
-// ── 文案 ───────────────────────────────────────────────────────────
-const T = (() => {
-  const zh = typeof navigator !== "undefined" && /^zh/i.test(navigator.language);
-  return {
-    btn: zh ? "Telegram" : "Telegram",
-    btnTitle: zh ? "在 Telegram 中对话控制电脑（出门在外）" : "Chat with your computer via Telegram (away from home)",
-    close: zh ? "关闭" : "Close",
-    title: zh ? "Telegram 接入" : "Telegram Bridge",
-    subtitle: zh ? "在自己的 Telegram 里随时与 DeepSeek Harness 对话、控制电脑" : "Chat with DeepSeek Harness from your Telegram",
-    step1: zh ? "1. 在 Telegram 中创建机器人" : "1. Create a bot in Telegram",
-    step2: zh ? "2. 把 @BotFather 给的 Token 粘贴到下面" : "2. Paste the token from @BotFather below",
-    createBot: zh ? "打开 @BotFather 创建 Bot" : "Open @BotFather to create a bot",
-    tokenPlaceholder: zh ? "粘贴 Bot Token（形如 123456:ABC-...）" : "Paste bot token (e.g. 123456:ABC-...)",
-    save: zh ? "保存并连接" : "Save & Connect",
-    connecting: zh ? "连接中…" : "Connecting…",
-    connected: zh ? "已连接" : "Connected",
-    connectedDesc: zh ? "手机扫码后在 Telegram 中向该 Bot 发消息即可" : "Scan with your phone, then message the bot in Telegram",
-    reset: zh ? "断开并清除" : "Disconnect",
-    resetting: zh ? "断开中…" : "Disconnecting…",
-    err: zh ? "连接失败：" : "Connection failed: ",
-    qrHint: zh ? "扫码直达对话" : "Scan to open the chat",
-    tip: zh ? "首次使用需在 @BotFather 输入 /newbot 创建机器人，把获得的 Token 粘贴到上方。" : "First, run /newbot in @BotFather to create a bot, then paste the token above.",
-    proxyLabel: zh ? "代理地址（可选）" : "Proxy (optional)",
-    proxyPlaceholder: zh ? "如 http://127.0.0.1:7890；留空自动检测系统代理" : "e.g. http://127.0.0.1:7890; empty = auto-detect system proxy",
-    proxyDetected: zh ? "检测到系统代理：" : "System proxy detected: ",
-    proxyUsed: zh ? "当前使用代理：" : "Using proxy: ",
-    proxyNote: zh ? "如连接失败，请填写本地代理地址（Clash/v2ray 等）" : "If connection fails, enter your local proxy (Clash/v2ray etc.)",
-    helpHint: zh ? "连接后，在 Telegram 中发送 /help 可查看全部操作指令（新建/切换对话等）" : "After connecting, send /help in Telegram for all commands (new/switch conversations etc.)",
-  };
-})();
+const NS = "@dsh-desktop/telegram-bridge";
+
+// ── 文案：zh/en 双字典，注册进 Harness locale 服务，跟随其语言设置 ──
+const DICT = {
+  zh: {
+    btn: "Telegram",
+    btnTitle: "在 Telegram 中对话控制电脑（出门在外）",
+    close: "关闭",
+    title: "Telegram 接入",
+    subtitle: "在自己的 Telegram 里随时与 DeepSeek Harness 对话、控制电脑",
+    step1: "1. 在 Telegram 中创建机器人",
+    step2: "2. 把 @BotFather 给的 Token 粘贴到下面",
+    createBot: "打开 @BotFather 创建 Bot",
+    tokenPlaceholder: "粘贴 Bot Token（形如 123456:ABC-...）",
+    save: "保存并连接",
+    connecting: "连接中…",
+    connected: "已连接",
+    connectedDesc: "手机扫码后在 Telegram 中向该 Bot 发消息即可",
+    reset: "断开并清除",
+    resetting: "断开中…",
+    err: "连接失败：",
+    qrHint: "扫码直达对话",
+    tip: "首次使用需在 @BotFather 输入 /newbot 创建机器人，把获得的 Token 粘贴到上方。",
+    proxyLabel: "代理地址（可选）",
+    proxyPlaceholder: "如 http://127.0.0.1:7890；留空自动检测系统代理",
+    proxyDetected: "检测到系统代理：",
+    proxyUsed: "当前使用代理：",
+    proxyNote: "如连接失败，请填写本地代理地址（Clash/v2ray 等）",
+    helpHint: "连接后，在 Telegram 中发送 /help 可查看全部操作指令（新建/切换对话等）",
+  },
+  en: {
+    btn: "Telegram",
+    btnTitle: "Chat with your computer via Telegram (away from home)",
+    close: "Close",
+    title: "Telegram Bridge",
+    subtitle: "Chat with DeepSeek Harness from your Telegram",
+    step1: "1. Create a bot in Telegram",
+    step2: "2. Paste the token from @BotFather below",
+    createBot: "Open @BotFather to create a bot",
+    tokenPlaceholder: "Paste bot token (e.g. 123456:ABC-...)",
+    save: "Save & Connect",
+    connecting: "Connecting…",
+    connected: "Connected",
+    connectedDesc: "Scan with your phone, then message the bot in Telegram",
+    reset: "Disconnect",
+    resetting: "Disconnecting…",
+    err: "Connection failed: ",
+    qrHint: "Scan to open the chat",
+    tip: "First, run /newbot in @BotFather to create a bot, then paste the token above.",
+    proxyLabel: "Proxy (optional)",
+    proxyPlaceholder: "e.g. http://127.0.0.1:7890; empty = auto-detect system proxy",
+    proxyDetected: "System proxy detected: ",
+    proxyUsed: "Using proxy: ",
+    proxyNote: "If connection fails, enter your local proxy (Clash/v2ray etc.)",
+    helpHint: "After connecting, send /help in Telegram for all commands (new/switch conversations etc.)",
+  },
+};
+
+const T =
+  typeof navigator !== "undefined" && /^zh/i.test(navigator.language)
+    ? DICT.zh
+    : DICT.en;
+
+function makeT(t?: (key: string) => string): typeof T {
+  if (!t) return T;
+  return new Proxy(T, {
+    get: (_o, k) => (typeof k === "string" ? t(k) : undefined),
+  }) as typeof T;
+}
 
 // ── 样式（黑白主题，data-plugin-css 模式） ──────────────────────────
 const css = `
@@ -53,6 +92,11 @@ const css = `
 .tg-btn:hover { background:var(--dsw-alias-interactive-bg-hover,rgba(255,255,255,.07)); }
 .tg-btn svg { flex:none; }
 .tg-btn span { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.tg-btn.narrow { justify-content:center;padding:0; }
+/* 折叠态：两个插件按钮上下堆叠，避免左右挤压 */
+.dshd-footer-stack { display:flex !important; flex-direction:column !important; flex-wrap:nowrap !important; gap:4px; }
+.dshd-footer-stack .tg-btn,
+.dshd-footer-stack .lan-access-btn { width:100% !important; flex:0 0 auto; }
 .tg-overlay {
   position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.66);
   display:flex;align-items:center;justify-content:center;
@@ -120,7 +164,8 @@ interface TgInfo {
   proxyDetected: string | null;
 }
 
-function TelegramPanel({ onClose }: { onClose: () => void }) {
+function TelegramPanel({ onClose, t }: { onClose: () => void; t?: (key: string) => string }) {
+  const L = makeT(t);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [info, setInfo] = useState<TgInfo | null>(null);
   const [token, setToken] = useState("");
@@ -171,7 +216,7 @@ function TelegramPanel({ onClose }: { onClose: () => void }) {
       });
       const json = await res.json();
       if (!json.ok) {
-        setError(json.error ?? T.err);
+        setError(json.error ?? L.err);
       } else {
         setToken("");
         await refresh();
@@ -204,12 +249,12 @@ function TelegramPanel({ onClose }: { onClose: () => void }) {
     <div className="tg-overlay" onClick={onClose}>
       <div className="tg-card" onClick={(e) => e.stopPropagation()}>
         <div className="tg-head">
-          <h3>{T.title}</h3>
-          <button className="tg-close" onClick={onClose} aria-label={T.close}>
+          <h3>{L.title}</h3>
+          <button className="tg-close" onClick={onClose} aria-label={L.close}>
             ✕
           </button>
         </div>
-        <p className="tg-sub">{T.subtitle}</p>
+        <p className="tg-sub">{L.subtitle}</p>
 
         {info?.configured ? (
           <>
@@ -218,17 +263,17 @@ function TelegramPanel({ onClose }: { onClose: () => void }) {
             </div>
             <p className="tg-ok">@{info.username}</p>
             <p className="tg-hint">
-              {T.qrHint} · {T.connectedDesc}
-              {info.proxy ? ` · ${T.proxyUsed}${info.proxy}` : ""}
+              {L.qrHint} · {L.connectedDesc}
+              {info.proxy ? ` · ${L.proxyUsed}${info.proxy}` : ""}
             </p>
-            <p className="tg-hint">{T.helpHint}</p>
+            <p className="tg-hint">{L.helpHint}</p>
             <button className="tg-reset" onClick={reset} disabled={busy}>
-              {busy ? T.resetting : T.reset}
+              {busy ? L.resetting : L.reset}
             </button>
           </>
         ) : (
           <>
-            <div className="tg-step">{T.step1}</div>
+            <div className="tg-step">{L.step1}</div>
             <button
               className="tg-btn-outer"
               onClick={() => window.open("https://t.me/BotFather", "_blank")}
@@ -236,61 +281,111 @@ function TelegramPanel({ onClose }: { onClose: () => void }) {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M21.9 4.1 18.7 19c-.2 1.1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.4-4.9L18 6.2c.4-.4-.1-.6-.6-.2L7.2 12.9l-4.8-1.5c-1-.3-1-1 .2-1.5L20.6 2.6c.9-.3 1.6.2 1.3 1.5z" />
               </svg>
-              {T.createBot}
+              {L.createBot}
             </button>
-            <div className="tg-step">{T.step2}</div>
+            <div className="tg-step">{L.step2}</div>
             <input
               className="tg-input"
               value={token}
-              placeholder={T.tokenPlaceholder}
+              placeholder={L.tokenPlaceholder}
               onChange={(e) => setToken(e.target.value)}
               spellCheck={false}
             />
-            <div className="tg-step">{T.proxyLabel}</div>
+            <div className="tg-step">{L.proxyLabel}</div>
             <input
               className="tg-input"
               value={proxy}
-              placeholder={T.proxyPlaceholder}
+              placeholder={L.proxyPlaceholder}
               onChange={(e) => setProxy(e.target.value)}
               spellCheck={false}
             />
             {info?.proxyDetected && !info.proxy && (
               <p className="tg-hint" style={{ margin: "-4px 0 8px" }}>
-                {T.proxyDetected}{info.proxyDetected}
+                {L.proxyDetected}{info.proxyDetected}
               </p>
             )}
             <button className="tg-save" onClick={save} disabled={busy || token.trim() === ""}>
-              {busy ? T.connecting : T.save}
+              {busy ? L.connecting : L.save}
             </button>
-            <p className="tg-hint">{T.tip} {T.proxyNote}</p>
+            <p className="tg-hint">{L.tip} {L.proxyNote}</p>
           </>
         )}
 
-        {error && <p className="tg-err">{T.err}{error}</p>}
+        {error && <p className="tg-err">{L.err}{error}</p>}
       </div>
     </div>
   );
 }
 
-function TelegramButton() {
+function TelegramButton(props: { wide?: boolean; t?: (key: string) => string }) {
+  const { wide, t } = props;
+  const L = makeT(t);
   const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement | null>(null);
+  const [collapsedByHost, setCollapsedByHost] = useState(false);
+
+  // ── 折叠检测（只依赖框架原生信号，避免宽度启发式误判）──
+  // 1) wide prop：宿主 renderSlot("sidebar.footer.action", { wide })，wide=false 即折叠
+  // 2) 祖先类名：侧边栏根元素折叠时带 hHd-Xa_collapsed 类（dsh-client-ui-sidebar 源码），
+  //    用 MutationObserver 精确监听 class 变化（1s 轮询兜底）
+  useEffect(() => {
+    const el = btnRef.current;
+    if (!el) return;
+    const scan = () => {
+      let c = false;
+      for (let n: HTMLElement | null = el; n; n = n.parentElement) {
+        if (/collapsed|compact|icon-only|minimize/i.test(String(n.className || ""))) {
+          c = true;
+          break;
+        }
+        if (n.tagName === "BODY") break;
+      }
+      setCollapsedByHost(c);
+    };
+    scan();
+    const mo = new MutationObserver(scan);
+    for (let n: HTMLElement | null = el; n; n = n.parentElement) {
+      mo.observe(n, { attributes: true, attributeFilter: ["class"] });
+      if (n.tagName === "BODY") break;
+    }
+    const timer = setInterval(scan, 1000);
+    return () => {
+      mo.disconnect();
+      clearInterval(timer);
+    };
+  }, []);
+
+  const narrow = props.wide === false || collapsedByHost;
+
+  // 折叠态：把宿主容器切成上下堆叠（两个插件按钮各占一行，不再左右挤压）
+  useEffect(() => {
+    const el = btnRef.current;
+    if (el?.parentElement) el.parentElement.classList.toggle("dshd-footer-stack", narrow);
+  }, [narrow]);
+
   return (
     <>
-      <button className="tg-btn" onClick={() => setOpen(true)} title={T.btnTitle}>
+      <button
+        ref={btnRef}
+        className={"tg-btn" + (narrow ? " narrow" : "")}
+        onClick={() => setOpen(true)}
+        title={L.btnTitle}
+      >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M21.9 4.1 18.7 19c-.2 1.1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.4-4.9L18 6.2c.4-.4-.1-.6-.6-.2L7.2 12.9l-4.8-1.5c-1-.3-1-1 .2-1.5L20.6 2.6c.9-.3 1.6.2 1.3 1.5z" />
         </svg>
-        <span>{T.btn}</span>
+        {!narrow && <span>{L.btn}</span>}
       </button>
-      {open && <TelegramPanel onClose={() => setOpen(false)} />}
+      {open && <TelegramPanel onClose={() => setOpen(false)} t={t} />}
     </>
   );
 }
 
 // ── 插件契约 ───────────────────────────────────────────────────────
-const inject = ["slots"];
+const inject = ["slots", "locale"];
 
 function apply(ctx: any) {
+  ctx.effect(() => ctx.locale.register(NS, DICT), "telegram-bridge: dictionaries");
   ctx.effect(
     () =>
       ctx.slots.register(
@@ -298,6 +393,7 @@ function apply(ctx: any) {
           name: "sidebar.footer.action",
           id: "telegram-bridge",
           priority: 21,
+          locale: NS,
         },
         TelegramButton,
       ),

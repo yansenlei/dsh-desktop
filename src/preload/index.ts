@@ -12,6 +12,7 @@ import {
   InstallKind,
   InstallProgress,
   DesktopSettings,
+  UpdateProgress,
 } from "../shared/types";
 
 const api = {
@@ -61,10 +62,18 @@ const api = {
     ipcRenderer.invoke(IPC.updateDownload),
   installUpdate: (filePath?: string): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke(IPC.updateInstall, filePath),
-  onUpdateProgress: (fn: (p: { stage: string; percent: number | null; filePath?: string; error?: string }) => void) => {
-    const listener = (_e: unknown, p: { stage: string; percent: number | null; filePath?: string; error?: string }) => fn(p);
+  getUpdateStatus: (): Promise<{ phase: string; progress: UpdateProgress | null }> =>
+    ipcRenderer.invoke(IPC.updateStatus),
+  cancelUpdate: (): Promise<boolean> => ipcRenderer.invoke(IPC.updateCancel),
+  onUpdateProgress: (fn: (p: UpdateProgress) => void) => {
+    const listener = (_e: unknown, p: UpdateProgress) => fn(p);
     ipcRenderer.on(IPC.updateProgress, listener);
     return () => ipcRenderer.removeListener(IPC.updateProgress, listener);
+  },
+  onFocusAbout: (fn: (payload: { version?: string }) => void) => {
+    const listener = (_e: unknown, payload: { version?: string }) => fn(payload ?? {});
+    ipcRenderer.on(IPC.settingsFocusAbout, listener);
+    return () => ipcRenderer.removeListener(IPC.settingsFocusAbout, listener);
   },
 
   // 窗口控制

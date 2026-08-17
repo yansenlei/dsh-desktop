@@ -196,6 +196,9 @@ jobs:
           path: artifacts
           merge-multiple: true
 
+      # release job 在全新 runner 上运行，先 checkout 才能读取 CHANGELOG.md
+      - uses: actions/checkout@v4
+
       # 从 CHANGELOG.md 提取当前版本的条目（中英双语）作为 Release Notes
       - name: Extract changelog for release
         id: changelog

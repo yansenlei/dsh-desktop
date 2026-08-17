@@ -191,13 +191,14 @@ jobs:
     permissions:
       contents: write
     steps:
+      # 先 checkout（默认会清理工作目录，必须在下载资产之前执行，
+      # 否则下载的安装包会被 checkout 清掉）
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v5
         with:
           path: artifacts
           merge-multiple: true
-
-      # release job 在全新 runner 上运行，先 checkout 才能读取 CHANGELOG.md
-      - uses: actions/checkout@v4
 
       # 从 CHANGELOG.md 提取当前版本的条目（中英双语）作为 Release Notes
       - name: Extract changelog for release

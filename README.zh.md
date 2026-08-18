@@ -22,6 +22,10 @@
 
 插件源码独立开源，也可单独安装到任意 DSH 环境：`npx dsh-plugin-lan-access` / `npx dsh-plugin-telegram-bridge`（见 [dsh-plugin-lan-access](https://github.com/yansenlei/dsh-plugin-lan-access) / [dsh-plugin-telegram-bridge](https://github.com/yansenlei/dsh-plugin-telegram-bridge)）。
 
+## 插件市场：更多 DSH 插件，一键装好
+
+「设置 → 插件 → **搜索安装**」：搜索全网 npm 上的 DSH 插件，一键安装（也支持按包名安装、拖入 `.tgz` 安装包），装好的插件可在「**我的插件**」里随时禁用 / 启用 / 卸载，全程无需命令行。
+
 ## 产品特性
 
 - **一键安装**：NSIS 安装包，双击 → 安装 → 自动启动，桌面/开始菜单快捷方式、卸载器齐全。
@@ -30,6 +34,7 @@
 - **桌面壳体验**：暗黑科技风品牌启动页（旋转光环 logo + 启动进度 + 运行日志）→ 自动载入 Harness 工作台；系统托盘常驻（状态、打开/重启/设置/退出）。
 - **📱 扫码局域网（在家）**：内置 `lan-access` 插件。手机连上家里/办公室的同一 Wi-Fi，扫 Harness 侧边栏「手机访问」的二维码，就能在手机上打开你的电脑工作台——躺着也能让 AI 干活。桌面端「设置 → 局域网访问」一键开关（默认关闭，仅本机访问，开启才向局域网开放，见下文安全说明）。
 - **📱 扫码 Telegram（出门在外）**：内置 `telegram-bridge` 插件。在自己的 Telegram 里加机器人（扫码直达），随时发消息让 AI 操作你的电脑——人不在电脑前，活照干。与浏览器工作台共用同一会话，聊天记录同步。
+- **🧩 插件市场（搜索安装）**：设置 → 插件 →「搜索安装」搜索全网 DSH 插件、一键安装（也支持按包名安装、拖入 `.tgz`），「我的插件」里可禁用 / 启用 / 卸载已装插件。
 - **环境一键补齐**：可选组件自动检测与一键安装 —— Python（winget 优先，回退官方安装包）、`dsh` 命令行工具（自动装 Node LTS + 全局 dsh）。
 - **数据自包含**：会话、配置、存储都放在应用数据目录，卸载不丢失；端口冲突自动顺延。
 - **跨平台**：Windows（NSIS 安装器）与 macOS（dmg/zip，x64 + Apple Silicon）均已适配；macOS 构建见 `docs/BUILD_MAC.md`。

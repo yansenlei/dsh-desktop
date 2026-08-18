@@ -76,6 +76,10 @@ const api = {
   getUpdateStatus: (): Promise<{ phase: string; progress: UpdateProgress | null }> =>
     ipcRenderer.invoke(IPC.updateStatus),
   cancelUpdate: (): Promise<boolean> => ipcRenderer.invoke(IPC.updateCancel),
+  installPlugin: (req: import("../shared/types").PluginInstallRequest): Promise<import("../shared/types").PluginInstallResult> =>
+    ipcRenderer.invoke(IPC.pluginInstall, req),
+  managePlugin: (req: import("../shared/types").PluginManageRequest): Promise<import("../shared/types").PluginManageResult> =>
+    ipcRenderer.invoke(IPC.pluginManage, req),
   onUpdateProgress: (fn: (p: UpdateProgress) => void) => {
     const listener = (_e: unknown, p: UpdateProgress) => fn(p);
     ipcRenderer.on(IPC.updateProgress, listener);

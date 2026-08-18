@@ -23,6 +23,10 @@ A one-click installer + desktop client for **DeepSeek Harness**, built for non-t
 
 Plugin source code is open and can also be installed into any DSH environment: `npx dsh-plugin-lan-access` / `npx dsh-plugin-telegram-bridge` (see [dsh-plugin-lan-access](https://github.com/yansenlei/dsh-plugin-lan-access) / [dsh-plugin-telegram-bridge](https://github.com/yansenlei/dsh-plugin-telegram-bridge)).
 
+## Plugin market: install more DSH plugins in one click
+
+Settings → Plugins → **Search & install** finds DSH plugins across the whole npm registry: search, one-click install (or install by package name, or drop in a `.tgz`), then disable / enable / uninstall anytime under **My Plugins**. No command line needed.
+
 ## Features
 
 - **One-click install**: NSIS installer — double-click → install → auto-launch. Desktop/Start-menu shortcuts and a full uninstaller included.
@@ -31,6 +35,7 @@ Plugin source code is open and can also be installed into any DSH environment: `
 - **Desktop shell experience**: dark tech-style branded boot page (spinning halo logo + boot progress + live logs) → auto-loads the Harness workspace; system tray resident (status, open/restart/settings/quit).
 - **📱 QR over LAN (at home)**: built-in `lan-access` plugin. Connect your phone to the same home/office Wi-Fi, scan the QR in the Harness sidebar ("LAN"), and open your workspace on the phone — get AI work done from the couch. One-click toggle in Desktop Settings → LAN Access (off by default, local-only; see the security note below).
 - **📱 Telegram remote (on the go)**: built-in `telegram-bridge` plugin. Add a bot in your own Telegram (scan-to-connect), then message it anytime to have AI operate your computer — even when you're not in front of it. Shares the same session as the browser workspace, with synced history.
+- **🧩 Plugin market (search & install)**: Settings → Plugins → "Search & install" searches all DSH plugins on npm — one-click install (also by package name or by dropping in a `.tgz`), and manage installed plugins (disable / enable / uninstall) under "My Plugins".
 - **Optional environment one-click setup**: auto-detect and one-click install of Python (winget first, official installer fallback) and the `dsh` CLI (auto-installs Node LTS + global dsh).
 - **Self-contained data**: sessions, config and storage live in the app data directory — uninstalling never deletes them; port conflicts auto-roll to the next free port.
 - **Cross-platform**: Windows (NSIS installer) and macOS (dmg/zip, x64 + Apple Silicon) are both supported; see `docs/BUILD_MAC.md` for macOS builds.

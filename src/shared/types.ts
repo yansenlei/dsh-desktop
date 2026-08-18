@@ -88,6 +88,31 @@ export interface EngineCheckResult {
   prevVersion: string | null;
 }
 
+/** 插件安装请求：spec=npm 包名或本地 .tgz 路径；文件安装时传 fileName+fileBase64。 */
+export interface PluginInstallRequest {
+  spec?: string;
+  fileName?: string;
+  fileBase64?: string;
+}
+
+export interface PluginInstallResult {
+  ok: boolean;
+  name?: string;
+  error?: string;
+}
+
+/** 插件管理请求：disable=禁用 / enable=启用 / uninstall=卸载。 */
+export interface PluginManageRequest {
+  action: "disable" | "enable" | "uninstall";
+  name: string;
+}
+
+export interface PluginManageResult {
+  ok: boolean;
+  name?: string;
+  error?: string;
+}
+
 /** 引擎独立更新进度。 */
 export interface EngineUpdateProgress {
   /** stage: downloading / installing / finishing / done / error */
@@ -166,6 +191,8 @@ export const IPC = {
   updateStatus: "update:status",
   updateCancel: "update:cancel",
   updateInfo: "update:info",
+  pluginInstall: "plugin:install",
+  pluginManage: "plugin:manage",
   engineCheck: "engine:check",
   engineUpdate: "engine:update",
   engineRevert: "engine:revert",

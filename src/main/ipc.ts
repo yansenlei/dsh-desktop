@@ -3,7 +3,7 @@
  */
 import { ipcMain, shell, BrowserWindow, app, dialog } from "electron";
 import { spawn, spawnSync } from "node:child_process";
-import { createWriteStream, existsSync, cpSync, rmSync } from "node:fs";
+import { createWriteStream, existsSync, cpSync, rmSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { rm, mkdir } from "node:fs/promises";
 import {
@@ -15,6 +15,10 @@ import {
   UpdateProgress,
   EngineCheckResult,
   EngineUpdateProgress,
+  PluginInstallRequest,
+  PluginInstallResult,
+  PluginManageRequest,
+  PluginManageResult,
 } from "../shared/types";
 import { DshServerManager } from "./server";
 import { getSettings, setSettings } from "./settings";
@@ -28,6 +32,8 @@ export interface IpcDeps {
   openSettingsWindow: () => void;
   /** DSH 运行时目录（打包后为 resources/dsh-runtime，开发为项目 runtime/）。 */
   runtimeDir: string;
+  /** DSH_HOME（profile 所在目录）。 */
+  dshHome: string;
 }
 
 /** 更新事件：下载安装包的进度广播（主进程 → 全部窗口）。 */
@@ -247,6 +253,45 @@ async function fetchEngineLatest(): Promise<string | null> {
 // ── 引擎独立更新：内置 npm CLI + 真实 npm install 更新整棵运行时依赖树 ──
 let engineUpdating = false;
 
+interface MarketEntry {
+  name: string;
+  disabled?: boolean;
+}
+
+interface MarketList {
+  plugins: MarketEntry[];
+}
+
+/** 读取插件市场清单（兼容旧版 string[]）。 */
+function readMarketList(dshHome: string): MarketList {
+  const raw = readJson(join(dshHome, "plugin-market.json")) as { plugins?: unknown } | null;
+  const arr = Array.isArray(raw?.plugins) ? raw!.plugins : [];
+  const plugins: MarketEntry[] = arr.map((p) =>
+    typeof p === "string" ? { name: p } : { name: String((p as MarketEntry).name ?? ""), disabled: Boolean((p as MarketEntry).disabled) },
+  ).filter((p) => p.name);
+  return { plugins };
+}
+
+function writeMarketList(dshHome: string, list: MarketList) {
+  writeFileSync(join(dshHome, "plugin-market.json"), JSON.stringify(list, null, 2), "utf8");
+}
+
+/** profile package.json 的 dsh.profile.bundles（随 profile 启动加载的插件）。 */
+function readProfileBundles(profileDir: string): string[] {
+  const pkg = readJson(join(profileDir, "package.json")) as { dsh?: { profile?: { bundles?: unknown } } } | null;
+  const b = pkg?.dsh?.profile?.bundles;
+  return Array.isArray(b) ? b.filter((x): x is string => typeof x === "string") : [];
+}
+
+function writeProfileBundles(profileDir: string, bundles: string[]) {
+  const p = join(profileDir, "package.json");
+  const pkg = (readJson(p) ?? {}) as { dsh?: { profile?: { bundles?: string[] } } };
+  if (!pkg.dsh) pkg.dsh = {};
+  if (!pkg.dsh.profile) pkg.dsh.profile = {};
+  pkg.dsh.profile.bundles = bundles;
+  writeFileSync(p, JSON.stringify(pkg, null, 2) + "\n", "utf8");
+}
+
 function readJson(p: string): Record<string, unknown> | null {
   try {
     const { readFileSync } = require("node:fs") as typeof import("node:fs");
@@ -277,12 +322,12 @@ function hasBundledNpm(runtimeDir: string): boolean {
   return existsSync(npmCliPath(runtimeDir));
 }
 
-/** 用内置 npm CLI 在 runtime/dsh 下执行 npm 命令（ELECTRON_RUN_AS_NODE）。 */
-function runNpm(runtimeDir: string, args: string[]): { code: number | null; log: string } {
+/** 用内置 npm CLI 执行 npm 命令（runtimeDir 定位 CLI，cwd 为执行目录）。 */
+function runNpm(runtimeDir: string, cwd: string, args: string[]): { code: number | null; log: string } {
   const cli = npmCliPath(runtimeDir);
   const cache = join(app.getPath("temp"), "dsh-npm-cache");
   const child = spawnSync(process.execPath, [cli, "--cache", cache, ...args], {
-    cwd: join(runtimeDir, "dsh"),
+    cwd,
     env: {
       ...process.env,
       ELECTRON_RUN_AS_NODE: "1",
@@ -325,7 +370,7 @@ async function performEngineUpdate(runtimeDir: string, targetVersion: string | n
 
   // 1) 整树安装（npm 真实解析：新引擎的 @deepseek-ai/* 依赖随同版本升级）
   const spec = targetVersion ? `@deepseek-ai/dsh@${targetVersion}` : "@deepseek-ai/dsh@latest";
-  const r1 = runNpm(runtimeDir, ["install", "--no-audit", "--no-fund", "--ignore-scripts", spec]);
+  const r1 = runNpm(runtimeDir, join(runtimeDir, "dsh"), ["install", "--no-audit", "--no-fund", "--ignore-scripts", spec]);
   if (r1.code !== 0) {
     restorePlugins();
     return { ok: false, error: `NPM_FAILED:${r1.log.slice(0, 300)}` };
@@ -346,7 +391,7 @@ async function performEngineUpdate(runtimeDir: string, targetVersion: string | n
     if (koffiVer && !existsSync(join(koromixDir, "koffi-win32-x64"))) platPkgs.push(`@koromix/koffi-win32-x64@${koffiVer}`);
   }
   if (platPkgs.length > 0) {
-    const r2 = runNpm(runtimeDir, ["install", "--no-save", "--no-audit", "--no-fund", "--ignore-scripts", ...platPkgs]);
+    const r2 = runNpm(runtimeDir, join(runtimeDir, "dsh"), ["install", "--no-save", "--no-audit", "--no-fund", "--ignore-scripts", ...platPkgs]);
     if (r2.code !== 0) return { ok: false, error: `NPM_FAILED:${r2.log.slice(0, 300)}` };
   }
   broadcastEngineProgress({ stage: "finishing", percent: 90 });
@@ -400,7 +445,7 @@ export async function checkEngineUpdate(runtimeDir: string): Promise<EngineCheck
 }
 
 export function registerIpc(deps: IpcDeps) {
-  const { server, getAppInfo, openSettingsWindow, runtimeDir } = deps;
+  const { server, getAppInfo, openSettingsWindow, runtimeDir, dshHome } = deps;
 
   // ── 基础信息 ─────────────────────────────────────────────
   ipcMain.handle(IPC.appInfo, () => getAppInfo());
@@ -673,6 +718,90 @@ export function registerIpc(deps: IpcDeps) {
       app.quit();
     }, 500);
     return { ok: true };
+  });
+
+  // ── 插件市场安装：npm 安装到 profile 目录 + 记录 + 重启服务 ──────
+  ipcMain.handle(IPC.pluginInstall, async (_e, req: PluginInstallRequest): Promise<PluginInstallResult> => {
+    try {
+      const profileDir = join(dshHome, "profiles", "web");
+      if (!existsSync(join(profileDir, "package.json"))) return { ok: false, error: "PROFILE_MISSING" };
+      if (!hasBundledNpm(runtimeDir)) return { ok: false, error: "NO_NPM" };
+      let spec: string;
+      if (req.fileBase64 && req.fileName) {
+        const tmpDir = join(app.getPath("temp"), "dsh-plugin-tgz");
+        await mkdir(tmpDir, { recursive: true });
+        const file = join(tmpDir, String(req.fileName).replace(/[^\w.\-]/g, "_"));
+        writeFileSync(file, Buffer.from(req.fileBase64, "base64"));
+        spec = file;
+      } else if (req.spec && req.spec.trim()) {
+        spec = req.spec.trim();
+      } else {
+        return { ok: false, error: "NO_SPEC" };
+      }
+      // 记录安装前依赖，用于识别新安装的包名（npm 会把包名写进 profile dependencies）
+      const before = Object.keys(readJson(join(profileDir, "package.json"))?.dependencies ?? {});
+      const r = runNpm(runtimeDir, profileDir, ["install", "--no-audit", "--no-fund", "--ignore-scripts", spec]);
+      if (r.code !== 0) return { ok: false, error: `NPM_FAILED:${r.log.slice(0, 200)}` };
+      const after = Object.keys(readJson(join(profileDir, "package.json"))?.dependencies ?? {});
+      const added = after.find((n) => !before.includes(n));
+      if (!added) return { ok: false, error: "NAME_UNKNOWN" };
+      // 持久化安装列表（服务重启时 patch 注入该插件）
+      const listPath = join(dshHome, "plugin-market.json");
+      const list = (readJson(listPath) ?? {}) as { plugins?: string[] };
+      const plugins = Array.isArray(list.plugins) ? list.plugins : [];
+      if (!plugins.includes(added)) plugins.push(added);
+      writeFileSync(listPath, JSON.stringify({ plugins }, null, 2), "utf8");
+      info(`插件已安装: ${added}，1.5s 后重启服务加载`);
+      // 先返回成功，再延迟重启：服务重启会卸载 Harness 页面，
+      // 若在 IPC 内同步重启，调用方的响应会丢失 → 界面误报"安装失败"并卡顿
+      setTimeout(() => {
+        void server.stop().then(() => server.start());
+      }, 1500);
+      return { ok: true, name: added };
+    } catch (err) {
+      return { ok: false, error: (err as Error).message };
+    }
+  });
+
+  // ── 插件管理：禁用 / 启用 / 卸载 ──────────────────────────────────
+  ipcMain.handle(IPC.pluginManage, async (_e, req: PluginManageRequest): Promise<PluginManageResult> => {
+    try {
+      const profileDir = join(dshHome, "profiles", "web");
+      if (!existsSync(join(profileDir, "package.json"))) return { ok: false, error: "PROFILE_MISSING" };
+      const list = readMarketList(dshHome);
+      const bundlePlugin = readProfileBundles(profileDir).includes(req.name);
+
+      if (req.action === "disable") {
+        let entry = list.plugins.find((p) => p.name === req.name);
+        if (!entry) {
+          entry = { name: req.name };
+          list.plugins.push(entry);
+        }
+        entry.disabled = true;
+        if (bundlePlugin) writeProfileBundles(profileDir, readProfileBundles(profileDir).filter((n) => n !== req.name));
+      } else if (req.action === "enable") {
+        const entry = list.plugins.find((p) => p.name === req.name);
+        if (entry) entry.disabled = false;
+        if (bundlePlugin && !readProfileBundles(profileDir).includes(req.name)) {
+          writeProfileBundles(profileDir, [...readProfileBundles(profileDir), req.name]);
+        }
+      } else if (req.action === "uninstall") {
+        const r = runNpm(runtimeDir, profileDir, ["uninstall", "--no-audit", "--no-fund", "--ignore-scripts", req.name]);
+        if (r.code !== 0) return { ok: false, error: `NPM_FAILED:${r.log.slice(0, 200)}` };
+        list.plugins = list.plugins.filter((p) => p.name !== req.name);
+        if (bundlePlugin) writeProfileBundles(profileDir, readProfileBundles(profileDir).filter((n) => n !== req.name));
+      } else {
+        return { ok: false, error: "BAD_ACTION" };
+      }
+      writeMarketList(dshHome, list);
+      info(`插件管理: ${req.action} ${req.name}，1.5s 后重启服务`);
+      setTimeout(() => {
+        void server.stop().then(() => server.start());
+      }, 1500);
+      return { ok: true, name: req.name };
+    } catch (err) {
+      return { ok: false, error: (err as Error).message };
+    }
   });
 
   // ── 窗口控制 ─────────────────────────────────────────────

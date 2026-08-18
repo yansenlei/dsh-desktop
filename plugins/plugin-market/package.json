@@ -1,7 +1,7 @@
 {
-  "name": "@dsh-desktop/lan-access",
+  "name": "@dsh-desktop/plugin-market",
   "version": "0.1.0",
-  "description": "局域网访问插件：在 Harness UI 中显示二维码，手机扫码即可在局域网内访问自己的电脑",
+  "description": "插件市场：搜索全网 DSH 插件、一键安装（含按包名安装、拖入安装包）",
   "private": true,
   "type": "module",
   "main": "lib/index.js",

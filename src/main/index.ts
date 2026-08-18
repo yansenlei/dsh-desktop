@@ -381,6 +381,7 @@ function main() {
       getAppInfo: () => getAppInfo(runtimeDir, userDataDir, dshHome),
       openSettingsWindow: () => createSettingsWindow(),
       runtimeDir,
+      dshHome,
     });
     trace("registerIpc done");
 

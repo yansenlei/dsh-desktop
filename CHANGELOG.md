@@ -9,6 +9,24 @@
 - 正式代码签名 + 公证（消除 SmartScreen「未知发布者」与 macOS「无法验证开发者」弹窗，需代码签名证书 / Apple 开发者证书 + 公证）
 - 更新体验优化（可选：迁移 electron-updater 实现差分更新 / sha512 校验 / 失败回滚）
 
+## [0.3.1] - 2026-08-18
+
+### 中文
+功能更新（插件市场）：
+
+- **功能**：新增「**插件市场**」模块——设置 → 插件 →「搜索安装」：搜索全网 npm 上的 DSH 插件并一键安装（按相关性/安全性/流行度排序，自动过滤无关与官方冲突包）；支持按包名安装、点击选择或拖入 `.tgz` 安装包本地安装
+- **功能**：已安装插件管理——「我的插件」折叠区展示已装插件，可**禁用 / 启用 / 卸载**（禁用仅停用加载、保留数据，卸载真正移除，均自动重启服务生效）
+- **修复**：安装/管理操作先返回结果再延迟重启服务，避免误报失败与界面卡顿；作用域包名（`@scope/name`）注入配置加引号，修复 YAML 解析崩溃
+- **内部**：插件市场随桌面端内置发布；lan-access / telegram-bridge 补全 repository / homepage 元数据
+
+### English
+Features (plugin market):
+
+- **Feature**: New **Plugin Market** — Settings → Plugins → "Search & install": search all DSH plugins on npm and install in one click (ranked by relevance/safety/popularity, unrelated and conflicting official packages filtered out); install by package name, or pick / drag-drop a `.tgz` to install locally
+- **Feature**: Installed-plugin management — a collapsible "My Plugins" section lists installed plugins with **disable / enable / uninstall** (disable only stops loading while keeping data, uninstall truly removes; the service auto-restarts to apply)
+- **Fix**: Install/manage operations now return first and restart the service on a delay, preventing false failures and UI stalls; scoped package names (`@scope/name`) are quoted in the injected config, fixing a YAML parse crash
+- **Internal**: the plugin market ships built-in with the desktop app; lan-access / telegram-bridge gained repository / homepage metadata
+
 ## [0.3.0] - 2026-08-17
 
 ### 中文

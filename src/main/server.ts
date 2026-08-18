@@ -12,9 +12,8 @@
  */
 import { spawn, ChildProcess } from "node:child_process";
 import { createServer } from "node:net";
-import { openSync, closeSync, statSync, readSync, mkdirSync, writeFileSync, symlinkSync, lstatSync, unlinkSync, rmSync, realpathSync } from "node:fs";
+import { openSync, closeSync, statSync, readSync, mkdirSync, writeFileSync, readFileSync, existsSync, symlinkSync, lstatSync, unlinkSync, rmSync, realpathSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { existsSync } from "node:fs";
 import type { ServerPhase, ServerStatus } from "../shared/types";
 import { info, warn, error as logError, getLogDir } from "./logger";
 import { getSettings } from "./settings";
@@ -261,12 +260,37 @@ export class DshServerManager {
     const patchPath = join(this.opts.dshHome, "lan-access.patch.yml");
     try {
       const lines: string[] = [
-        "# 由 DSH Desktop 生成：注入内置插件（lan-access / telegram-bridge）",
+        "# 由 DSH Desktop 生成：注入内置插件（lan-access / telegram-bridge / plugin-market）+ 用户安装的插件",
       ];
       if (lanEnabled) {
         lines.push("- id: webserver", "  config:", "    host: '0.0.0.0'", "    port: !!js ctx.webStartup.port ?? 3080");
       }
-      lines.push("- insert:", "    - id: lan-access", "      name: '@dsh-desktop/lan-access'", "    - id: telegram-bridge", "      name: '@dsh-desktop/telegram-bridge'");
+      const inserts = [
+        "    - id: lan-access",
+        "      name: '@dsh-desktop/lan-access'",
+        "    - id: telegram-bridge",
+        "      name: '@dsh-desktop/telegram-bridge'",
+        "    - id: plugin-market",
+        "      name: '@dsh-desktop/plugin-market'",
+      ];
+      // 插件市场安装的插件：随服务重启注入
+      try {
+        const listPath = join(this.opts.dshHome, "plugin-market.json");
+        if (existsSync(listPath)) {
+          const list = JSON.parse(readFileSync(listPath, "utf8")) as { plugins?: unknown };
+          for (const pkg of Array.isArray(list.plugins) ? list.plugins : []) {
+            const pname = typeof pkg === "string" ? pkg : (pkg as { name?: unknown; disabled?: unknown }).name;
+            const disabled = typeof pkg === "object" && pkg !== null && Boolean((pkg as { disabled?: unknown }).disabled);
+            if (typeof pname === "string" && pname && !disabled) {
+              // 必须加引号：作用域包名以 @ 开头，裸值会导致 YAML 解析失败
+              inserts.push(`    - id: '${pname}'`, `      name: '${pname}'`);
+            }
+          }
+        }
+      } catch {
+        /* 列表不存在或损坏则忽略 */
+      }
+      lines.push("- insert:", ...inserts);
       mkdirSync(dirname(patchPath), { recursive: true });
       writeFileSync(patchPath, lines.join("\n") + "\n", "utf8");
     } catch (err) {
@@ -274,6 +298,7 @@ export class DshServerManager {
     }
     this.ensurePluginLinked("lan-access");
     this.ensurePluginLinked("telegram-bridge");
+    this.ensurePluginLinked("plugin-market");
     return patchPath;
   }
 

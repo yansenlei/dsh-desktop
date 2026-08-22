@@ -2,6 +2,22 @@
 
 本仓库的发布历史与维护记录。版本号遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.3.2] - 2026-08-22
+
+### 中文
+修复（引擎版本回退）：
+
+- **修复**：**应用更新后不再丢失单独升级的引擎版本**——用户手动升级/回滚引擎后，版本记录持久化到应用数据目录；Desktop 整包更新会把内置引擎覆盖为发布包版本，现在启动时自动检测并恢复到用户上次设置的引擎版本（恢复完成后自动重启服务并弹系统通知）
+- **修复**：引擎 npm 安装与插件市场安装/卸载改为**异步执行**，不再阻塞主进程（此前大版本引擎更新时界面可能长时间无响应）
+- **内部**：引擎版本持久化文件 `engine-version.json` 位于应用数据目录，随应用数据保留、不随安装包覆盖
+
+### English
+Fixes (engine version rollback):
+
+- **Fix**: **Independently-upgraded engine versions survive app updates** — the engine version you set manually is now persisted to the app data directory; since a Desktop update replaces the bundled engine with the release version, the app now detects the mismatch at startup and automatically restores your engine version (restarting the service and showing a system notification when done)
+- **Fix**: Engine npm installs and plugin-market install/uninstall now run **asynchronously** and no longer block the main process (large engine updates previously froze the UI for a long time)
+- **Internal**: the engine version is persisted at `engine-version.json` in the app data directory — kept with your app data, never overwritten by installers
+
 ## 维护待办（按优先级）
 
 ### 中优先级

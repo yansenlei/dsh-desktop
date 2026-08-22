@@ -1,7 +1,7 @@
 /**
  * IPC 注册：渲染进程（壳 UI）与主进程之间的全部通道。
  */
-import { ipcMain, shell, BrowserWindow, app, dialog } from "electron";
+import { ipcMain, shell, BrowserWindow, app, dialog, Notification } from "electron";
 import { spawn, spawnSync } from "node:child_process";
 import { createWriteStream, existsSync, cpSync, rmSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -34,6 +34,8 @@ export interface IpcDeps {
   runtimeDir: string;
   /** DSH_HOME（profile 所在目录）。 */
   dshHome: string;
+  /** 应用数据目录（userData）——引擎版本持久化在这里，应用整包更新不会覆盖。 */
+  userDataDir: string;
 }
 
 /** 更新事件：下载安装包的进度广播（主进程 → 全部窗口）。 */
@@ -314,6 +316,79 @@ function writeRuntimeMarker(runtimeDir: string, marker: Record<string, unknown>)
   }
 }
 
+// ── 引擎版本持久化（userData）────────────────────────────────────────
+// Desktop 整包更新会整体替换 bundle 内的 dsh-runtime（含 .dsh-runtime.json
+// 标记），导致用户单独升级的引擎版本被"回退"到新包内置版本。
+// 这里把用户主动升级/回滚到的版本记在 userData（应用更新不会覆盖），
+// 启动时检测不一致则自动恢复。文件放在 userData 根目录，与应用数据共存。
+interface EnginePersist {
+  /** 用户主动设置到的引擎版本（手动升级或回滚后的最终版本）。 */
+  dshVersion?: string;
+  /** 最近一次写入时间（ISO）。 */
+  updatedAt?: string;
+}
+
+function enginePersistPath(userDataDir: string): string {
+  return join(userDataDir, "engine-version.json");
+}
+
+function readPersistedEngine(userDataDir: string): string | null {
+  const p = readJson(enginePersistPath(userDataDir));
+  return typeof p?.dshVersion === "string" ? p.dshVersion : null;
+}
+
+function writePersistedEngine(userDataDir: string, version: string) {
+  try {
+    const { writeFileSync } = require("node:fs") as typeof import("node:fs");
+    const rec: EnginePersist = { dshVersion: version, updatedAt: new Date().toISOString() };
+    writeFileSync(enginePersistPath(userDataDir), JSON.stringify(rec, null, 2), "utf8");
+  } catch (err) {
+    warn(`写入引擎版本持久化失败: ${(err as Error).message}`);
+  }
+}
+
+/** Desktop 整包更新会覆盖 bundle 内的 dsh-runtime；启动时检测持久化的
+ *  用户引擎版本与当前内置版本不一致（回退）时，自动恢复到用户版本。
+ *  返回 { restored: true, version } 表示已恢复；调用方应随后重启服务。 */
+export async function restoreEngineAfterUpdate(
+  runtimeDir: string,
+  userDataDir: string,
+): Promise<{ restored: boolean; version?: string }> {
+  const saved = readPersistedEngine(userDataDir);
+  if (!saved) return { restored: false }; // 用户从未单独设置过引擎版本
+  const marker = readRuntimeMarker(runtimeDir);
+  const current = typeof marker.dshVersion === "string" ? marker.dshVersion : null;
+  if (current === saved) return { restored: false }; // 版本一致，无需恢复
+  if (engineUpdating) return { restored: false }; // 手动更新进行中，让位
+  engineUpdating = true;
+  try {
+    info(`检测到引擎版本回退: ${current ?? "(未标记)"} → 恢复用户版本 ${saved}`);
+    if (!hasBundledNpm(runtimeDir)) {
+      warn("无法自动恢复引擎：内置 npm CLI 不可用");
+      return { restored: false };
+    }
+    const r = await performEngineUpdate(runtimeDir, saved, userDataDir);
+    if (!r.ok) {
+      warn(`引擎自动恢复失败: ${r.error}`);
+      return { restored: false };
+    }
+    try {
+      if (Notification.isSupported()) {
+        const n = new Notification({
+          title: t("engine.restoredTitle"),
+          body: t("engine.restoredBody").replace("{v}", r.version ?? ""),
+        });
+        n.show();
+      }
+    } catch (err) {
+      warn(`引擎恢复通知失败: ${(err as Error).message}`);
+    }
+    return { restored: true, version: r.version };
+  } finally {
+    engineUpdating = false;
+  }
+}
+
 function npmCliPath(runtimeDir: string): string {
   return join(runtimeDir, "dsh", "npm-cli", "node_modules", "npm", "bin", "npm-cli.js");
 }
@@ -322,29 +397,48 @@ function hasBundledNpm(runtimeDir: string): boolean {
   return existsSync(npmCliPath(runtimeDir));
 }
 
-/** 用内置 npm CLI 执行 npm 命令（runtimeDir 定位 CLI，cwd 为执行目录）。 */
-function runNpm(runtimeDir: string, cwd: string, args: string[]): { code: number | null; log: string } {
-  const cli = npmCliPath(runtimeDir);
-  const cache = join(app.getPath("temp"), "dsh-npm-cache");
-  const child = spawnSync(process.execPath, [cli, "--cache", cache, ...args], {
-    cwd,
-    env: {
-      ...process.env,
-      ELECTRON_RUN_AS_NODE: "1",
-      npm_config_loglevel: "error",
-      npm_config_update_notifier: "false",
-    },
-    encoding: "utf8",
-    timeout: 20 * 60 * 1000,
-    maxBuffer: 32 * 1024 * 1024,
+/** 用内置 npm CLI 执行 npm 命令（runtimeDir 定位 CLI，cwd 为执行目录）。异步非阻塞。 */
+function runNpm(runtimeDir: string, cwd: string, args: string[]): Promise<{ code: number | null; log: string }> {
+  return new Promise((resolve) => {
+    const cli = npmCliPath(runtimeDir);
+    const cache = join(app.getPath("temp"), "dsh-npm-cache");
+    const child = spawn(process.execPath, [cli, "--cache", cache, ...args], {
+      cwd,
+      env: {
+        ...process.env,
+        ELECTRON_RUN_AS_NODE: "1",
+        npm_config_loglevel: "error",
+        npm_config_update_notifier: "false",
+      },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let out = "";
+    const timer = setTimeout(() => {
+      try {
+        child.kill();
+      } catch {
+        /* 忽略 */
+      }
+    }, 20 * 60 * 1000);
+    child.stdout.on("data", (d: Buffer) => (out += d.toString("utf8")));
+    child.stderr.on("data", (d: Buffer) => (out += d.toString("utf8")));
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      resolve({ code: -1, log: out || err.message });
+    });
+    child.on("exit", (code) => {
+      clearTimeout(timer);
+      resolve({ code, log: out.trim() });
+    });
   });
-  const log = `${child.stdout ?? ""}\n${child.stderr ?? ""}`.trim();
-  if (child.status !== 0) warn(`npm 执行失败 (code=${child.status}): ${log.slice(0, 600)}`);
-  return { code: child.status, log };
 }
 
 /** 引擎独立更新：npm install @deepseek-ai/dsh@<版本> → 平台包补齐 → 标记 →（mac 重签名）。 */
-async function performEngineUpdate(runtimeDir: string, targetVersion: string | null): Promise<{ ok: boolean; version?: string; error?: string }> {
+async function performEngineUpdate(
+  runtimeDir: string,
+  targetVersion: string | null,
+  userDataDir: string,
+): Promise<{ ok: boolean; version?: string; error?: string }> {
   const marker = readRuntimeMarker(runtimeDir);
   const current = typeof marker.dshVersion === "string" ? marker.dshVersion : null;
   if (!hasBundledNpm(runtimeDir)) return { ok: false, error: "NO_NPM" };
@@ -370,7 +464,7 @@ async function performEngineUpdate(runtimeDir: string, targetVersion: string | n
 
   // 1) 整树安装（npm 真实解析：新引擎的 @deepseek-ai/* 依赖随同版本升级）
   const spec = targetVersion ? `@deepseek-ai/dsh@${targetVersion}` : "@deepseek-ai/dsh@latest";
-  const r1 = runNpm(runtimeDir, join(runtimeDir, "dsh"), ["install", "--no-audit", "--no-fund", "--ignore-scripts", spec]);
+  const r1 = await runNpm(runtimeDir, join(runtimeDir, "dsh"), ["install", "--no-audit", "--no-fund", "--ignore-scripts", spec]);
   if (r1.code !== 0) {
     restorePlugins();
     return { ok: false, error: `NPM_FAILED:${r1.log.slice(0, 300)}` };
@@ -391,7 +485,7 @@ async function performEngineUpdate(runtimeDir: string, targetVersion: string | n
     if (koffiVer && !existsSync(join(koromixDir, "koffi-win32-x64"))) platPkgs.push(`@koromix/koffi-win32-x64@${koffiVer}`);
   }
   if (platPkgs.length > 0) {
-    const r2 = runNpm(runtimeDir, join(runtimeDir, "dsh"), ["install", "--no-save", "--no-audit", "--no-fund", "--ignore-scripts", ...platPkgs]);
+    const r2 = await runNpm(runtimeDir, join(runtimeDir, "dsh"), ["install", "--no-save", "--no-audit", "--no-fund", "--ignore-scripts", ...platPkgs]);
     if (r2.code !== 0) return { ok: false, error: `NPM_FAILED:${r2.log.slice(0, 300)}` };
   }
   broadcastEngineProgress({ stage: "finishing", percent: 90 });
@@ -405,6 +499,8 @@ async function performEngineUpdate(runtimeDir: string, targetVersion: string | n
   marker.dshVersion = installedVer;
   if (current && current !== installedVer) marker.prevVersion = current;
   writeRuntimeMarker(runtimeDir, marker);
+  // 持久化到 userData：应用整包更新后据此自动恢复用户设置的引擎版本
+  writePersistedEngine(userDataDir, installedVer);
 
   // 4) macOS：运行时在签名封印内，替换后需重新 ad-hoc 签名，否则 Gatekeeper 拦截
   if (process.platform === "darwin") {
@@ -445,7 +541,7 @@ export async function checkEngineUpdate(runtimeDir: string): Promise<EngineCheck
 }
 
 export function registerIpc(deps: IpcDeps) {
-  const { server, getAppInfo, openSettingsWindow, runtimeDir, dshHome } = deps;
+  const { server, getAppInfo, openSettingsWindow, runtimeDir, dshHome, userDataDir } = deps;
 
   // ── 基础信息 ─────────────────────────────────────────────
   ipcMain.handle(IPC.appInfo, () => getAppInfo());
@@ -525,7 +621,7 @@ export function registerIpc(deps: IpcDeps) {
     if (engineUpdating) return { ok: false, error: "BUSY" };
     engineUpdating = true;
     try {
-      const r = await performEngineUpdate(runtimeDir, null);
+      const r = await performEngineUpdate(runtimeDir, null, userDataDir);
       if (r.ok) {
         await server.stop();
         await server.start();
@@ -543,7 +639,7 @@ export function registerIpc(deps: IpcDeps) {
     const marker = readRuntimeMarker(runtimeDir);
     const prev = typeof marker.prevVersion === "string" ? marker.prevVersion : null;
     if (!prev) return { ok: false, error: "NO_PREV" };
-    const r = await performEngineUpdate(runtimeDir, prev);
+    const r = await performEngineUpdate(runtimeDir, prev, userDataDir);
     if (r.ok) {
       const m2 = readRuntimeMarker(runtimeDir);
       delete m2.prevVersion;
@@ -740,7 +836,7 @@ export function registerIpc(deps: IpcDeps) {
       }
       // 记录安装前依赖，用于识别新安装的包名（npm 会把包名写进 profile dependencies）
       const before = Object.keys(readJson(join(profileDir, "package.json"))?.dependencies ?? {});
-      const r = runNpm(runtimeDir, profileDir, ["install", "--no-audit", "--no-fund", "--ignore-scripts", spec]);
+      const r = await runNpm(runtimeDir, profileDir, ["install", "--no-audit", "--no-fund", "--ignore-scripts", spec]);
       if (r.code !== 0) return { ok: false, error: `NPM_FAILED:${r.log.slice(0, 200)}` };
       const after = Object.keys(readJson(join(profileDir, "package.json"))?.dependencies ?? {});
       const added = after.find((n) => !before.includes(n));
@@ -786,7 +882,7 @@ export function registerIpc(deps: IpcDeps) {
           writeProfileBundles(profileDir, [...readProfileBundles(profileDir), req.name]);
         }
       } else if (req.action === "uninstall") {
-        const r = runNpm(runtimeDir, profileDir, ["uninstall", "--no-audit", "--no-fund", "--ignore-scripts", req.name]);
+        const r = await runNpm(runtimeDir, profileDir, ["uninstall", "--no-audit", "--no-fund", "--ignore-scripts", req.name]);
         if (r.code !== 0) return { ok: false, error: `NPM_FAILED:${r.log.slice(0, 200)}` };
         list.plugins = list.plugins.filter((p) => p.name !== req.name);
         if (bundlePlugin) writeProfileBundles(profileDir, readProfileBundles(profileDir).filter((n) => n !== req.name));

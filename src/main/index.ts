@@ -12,8 +12,7 @@ import { LINKS } from "../shared/links";
 import { initLogger, info, warn, error as logError } from "./logger";
 import { initSettings, getSettings, setSettings } from "./settings";
 import { DshServerManager } from "./server";
-import { registerIpc } from "./ipc";
-import { checkAutoUpdate } from "./ipc";
+import { registerIpc, checkAutoUpdate, restoreEngineAfterUpdate } from "./ipc";
 import { t } from "./l10n";
 
 /** Smoke/诊断追踪：写入 SMOKE_TRACE 指向的文件（工作区内，便于受限环境排查）。 */
@@ -382,6 +381,7 @@ function main() {
       openSettingsWindow: () => createSettingsWindow(),
       runtimeDir,
       dshHome,
+      userDataDir,
     });
     trace("registerIpc done");
 
@@ -397,6 +397,25 @@ function main() {
     createMainWindow();
     trace("server.start");
     await server.start();
+
+    // ── 引擎版本自动恢复 ─────────────────────────────────────────────
+    // Desktop 整包更新会把 bundle 内的 dsh-runtime 替换为新包内置引擎，
+    // 覆盖用户单独升级的版本。启动后延迟检测：若 userData 里持久化的
+    // 用户引擎版本与当前内置版本不一致，自动恢复用户版本并重启服务。
+    setTimeout(() => {
+      void (async () => {
+        try {
+          const r = await restoreEngineAfterUpdate(runtimeDir, userDataDir);
+          if (r.restored) {
+            info(`引擎已自动恢复 v${r.version}，重启服务使其生效`);
+            await server.stop();
+            await server.start();
+          }
+        } catch (err) {
+          warn(`引擎自动恢复异常: ${(err as Error).message}`);
+        }
+      })();
+    }, 5_000);
 
     // ── 自动更新检查：启动时 + 每天固定时间（09:00） ────────────────
     startAutoUpdateChecks();

@@ -28,6 +28,10 @@ const dict: Record<string, Record<string, unknown>> = {
       notifyTitle: "发现新版本",
       notifyBody: "DeepSeek Harness Desktop v{v} 已发布，点击查看更新",
     },
+    engine: {
+      restoredTitle: "引擎版本已恢复",
+      restoredBody: "应用更新后已自动恢复 Harness 引擎 v{v}（保留你单独升级的版本）",
+    },
   },
   en: {
     settingsTitle: "DeepSeek Harness Desktop Settings",
@@ -50,6 +54,10 @@ const dict: Record<string, Record<string, unknown>> = {
       cancelDownload: "Cancel download",
       notifyTitle: "New version available",
       notifyBody: "DeepSeek Harness Desktop v{v} is out — click to view the update",
+    },
+    engine: {
+      restoredTitle: "Engine version restored",
+      restoredBody: "After the app update, Harness engine v{v} was restored automatically (your separately-upgraded version is kept)",
     },
   },
 };
